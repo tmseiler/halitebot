@@ -1,42 +1,31 @@
-import java.io.*;
+import ai.*;
+import game.*;
+
+import static util.Logger.out;
+
 import java.util.ArrayList;
 
 class HaliteBot {
     private int myID;
     private GameMap gameMap;
-    //    private ArrayList<Location> friendlyLocations;
+    private ArrayList<Location> friendlyLocations;
     private ArrayList<Location> friendlyBoundaries;
-    private ArrayList<Location> friendlyInteriors;
-//    private ArrayList<Location> enemyNeighbors;
 
-    PrintWriter out;
 
     void run() {
         InitPackage iPackage = Networking.getInit();
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        int seekDistance = Math.max(gameMap.height, gameMap.width) / 4;
-
-        try {
-            out = new PrintWriter(new FileWriter("debugv4.log"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        Networking.sendInit("Dahlia mk4");
-
+        Networking.sendInit("Dahlia mk5");
 
         while (true) {
             ArrayList<Move> moves = new ArrayList<>();
 
             gameMap = Networking.getFrame();
-
-//        friendlyLocations = new ArrayList<>(0);
+            out.printf("New turn\n\n");
+            friendlyLocations = new ArrayList<>(0);
             friendlyBoundaries = new ArrayList<>(0);
-            friendlyInteriors = new ArrayList<>(0);
-//        enemyNeighbors = new ArrayList<>(0);
-
 
             // pre-process locations
             for (int y = 0; y < gameMap.height; y++) {
@@ -44,19 +33,9 @@ class HaliteBot {
                     Location location = new Location(x, y);
                     Site site = gameMap.getSite(location);
                     if (isFriendly(site)) {
-//                        friendlyLocations.add(location);
+                        friendlyLocations.add(location);
                         if (isBoundary(location))
                             friendlyBoundaries.add(location);
-                        else
-                            friendlyInteriors.add(location);
-
-                        for (Direction d : Direction.CARDINALS) {
-                            Site potentialEnemy = gameMap.getSite(location, d);
-                            if (!isFriendly(potentialEnemy)) {
-                                potentialEnemy.individualAcquisitionScore();
-//                                enemyNeighbors.add(gameMap.getLocation(location, d));
-                            }
-                        }
                     } else {
                         // calculate desirability based on neighbors (poor man's clustering)
                         site.clusterAcquisitionScore = 0;
@@ -70,79 +49,28 @@ class HaliteBot {
                 }
             }
 
-            for (Location friendlyBoundary : friendlyBoundaries) {
-                Site site = gameMap.getSite(friendlyBoundary);
-                for (Direction d : Direction.CARDINALS) {
-                    Site neighborSite = gameMap.getSite(friendlyBoundary, d);
-                    if (!isFriendly(neighborSite)) {
-                        site.bolsterScore += neighborSite.strengthProductionIndex;
-//                        out.printf("bolsterScore for %s is %s\n", friendlyBoundary, site.bolsterScore);
-                    }
-                }
-            }
+            for (Location friendlyLoc : friendlyLocations) {
+                ActionSet actions = new ActionSet();
+//                actions.add(new WaitAction(gameMap, friendlyLoc));
 
-//            out.printf("%s\n", friendlyBoundaries);
-//            out.printf("%s\n", friendlyInteriors);
-
-            for (Location location : friendlyBoundaries) {
-                Location nearbyTarget = findBestValueNearby(location, 3);
-                double targetDistance = gameMap.getDistance(location, nearbyTarget);
-
-                Move move;
-                Direction dir = getAttackDirection(location);
-                Site site = gameMap.getSite(location);
-                if (site.strength > gameMap.getSite(location, dir).strength) {
-                    move = new Move(location, dir);
-                } else {
-                    out.printf("%s sees %s nearby. (Value %s, Distance %s)\n", location, nearbyTarget,
-                            gameMap.getSite(nearbyTarget).clusterAcquisitionScore, targetDistance);
-
-                    Location friendlyBoundary = findClosestBoundary(location);
-
-                    if (friendlyBoundary != null) {
-                        Site boundarySite = gameMap.getSite(friendlyBoundary);
-                        if (site.strength > site.production * 3
-                                && boundarySite.strength + site.strength < 255
-                                && site.strength < boundarySite.strength
-                                ) {
-                            move = moveToward(location, nearbyTarget, true);
-                        } else {
-                            move = new Move(location, Direction.STILL);
-                        }
+                for (Direction direction : Direction.CARDINALS) {
+                    Site neighbor = gameMap.getSite(friendlyLoc, direction);
+                    if (isFriendly(neighbor)) {
+                        actions.add(new BolsterAction(gameMap, friendlyLoc, direction));
                     } else {
-                        move = new Move(location, Direction.STILL);
+                        actions.add(new AttackAction(gameMap, friendlyLoc, direction));
                     }
                 }
-                moves.add(move);
-            }
-
-            for (Location loc : friendlyInteriors) {
-                Site site = gameMap.getSite(loc);
-                Move move;
-                if (site.strength > site.production * 3) {
-                    move = moveToward(loc, findClosestBoundary(loc), true);
-                } else {
-                    move = new Move(loc, Direction.STILL);
+                Move evaluatedMove = actions.evaluate();
+                if(evaluatedMove == null) {
+                    out.printf("Null move for %s\n", friendlyLoc);
+                    evaluatedMove = new Move(friendlyLoc, Direction.STILL);
                 }
-                moves.add(move);
+                moves.add(evaluatedMove);
             }
+            out.printf("Moves: %s\n", moves);
             Networking.sendFrame(moves);
         }
-    }
-
-    private Direction getAttackDirection(Location loc) {
-        // todo maybe nuke this
-        double bestScore = -1;
-        Site site = gameMap.getSite(loc);
-        Direction bestDirection = null;
-        for (Direction d : Direction.CARDINALS) {
-            Site checkSite = gameMap.getSite(loc, d);
-            if (!isFriendly(checkSite) && checkSite.strengthProductionIndex > bestScore) {
-                bestScore = checkSite.strengthProductionIndex;
-                bestDirection = d;
-            }
-        }
-        return bestDirection;
     }
 
     private Location findClosestBoundary(Location loc) {

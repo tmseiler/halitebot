@@ -1,3 +1,4 @@
+import game.GameMap;
 
 public class InitPackage {
     public int myID;

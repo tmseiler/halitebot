@@ -1,3 +1,5 @@
+package game;
+
 import java.util.ArrayList;
 public class GameMap{
     public ArrayList< ArrayList<Site> > contents;
@@ -73,6 +75,14 @@ public class GameMap{
             }
         }
         return l;
+    }
+
+    public ArrayList<Location> getNeighbors(Location loc) {
+        ArrayList<Location> neighbors = new ArrayList<>(0);
+        for (Direction d : Direction.CARDINALS)  {
+            neighbors.add(getLocation(loc, d));
+        }
+        return neighbors;
     }
 
     public Site getSite(Location loc, Direction dir) {

@@ -1,5 +1,6 @@
 package ai.qualifiers;
 
+import ai.Context;
 import ai.actions.Action;
 import ai.actions.MoveAction;
 import ai.scoring.*;
@@ -7,7 +8,7 @@ import ai.scoring.*;
 public class ReinforceQualifier extends Qualifier {
     public ReinforceQualifier(Context context, MoveAction moveAction) {
         super(context, moveAction);
-        addWeightScorer(new RipenessScorer(3));
+        addWeightScorer(new RipenessScorer(5));
         addWeightScorer(new CollisionScorer());
         addWeightScorer(new FriendlinessScorer());
         addWeightScorer(new ClusterValueScorer());

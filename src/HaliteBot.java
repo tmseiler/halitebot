@@ -2,7 +2,7 @@ import ai.actions.MoveAction;
 import ai.actions.WaitAction;
 import ai.qualifiers.AttackQualifier;
 import ai.actions.ActionSelector;
-import ai.scoring.Context;
+import ai.Context;
 import ai.qualifiers.MobilizeQualifier;
 import ai.qualifiers.ReinforceQualifier;
 import game.*;
@@ -14,6 +14,7 @@ import java.util.ArrayList;
 class HaliteBot {
     private int myID;
     private GameMap gameMap;
+    private GameMap projectionMap;
     private ArrayList<Location> friendlyLocations;
     private ArrayList<Location> friendlyBoundaries;
 
@@ -28,7 +29,10 @@ class HaliteBot {
         while (true) {
             ArrayList<Move> moves = new ArrayList<>();
 
-            gameMap = Networking.getFrame();
+            String frameString = Networking.getString();
+            gameMap = Networking.deserializeGameMap(frameString);
+            projectionMap = Networking.deserializeGameMap(frameString);
+
             out.printf("\n\nNew turn\n");
             friendlyLocations = new ArrayList<>(0);
             friendlyBoundaries = new ArrayList<>(0);
@@ -57,7 +61,7 @@ class HaliteBot {
 
             for (Location friendlyLoc : friendlyLocations) {
                 out.printf("\n%s\n", friendlyLoc);
-                Context context = new Context(friendlyLoc, gameMap, friendlyBoundaries, myID);
+                Context context = new Context(friendlyLoc, gameMap, friendlyBoundaries, myID, projectionMap);
                 ActionSelector selector = new ActionSelector(context, new WaitAction(context));
                 for (Direction direction : Direction.CARDINALS) {
                     selector.add(new AttackQualifier(context, new MoveAction(context, direction)));
@@ -65,7 +69,9 @@ class HaliteBot {
                     selector.add(new MobilizeQualifier(context, new MoveAction(context, direction)));
                 }
 
-                moves.add(selector.evaluate());
+                Move evaluatedMove = selector.evaluate();
+                projectionMap.evaluateMove(myID, evaluatedMove);
+                moves.add(evaluatedMove);
             }
             out.printf("Moves: %s\n", moves);
             Networking.sendFrame(moves);

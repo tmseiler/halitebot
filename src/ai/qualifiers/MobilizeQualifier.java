@@ -1,5 +1,6 @@
 package ai.qualifiers;
 
+import ai.Context;
 import ai.actions.Action;
 import ai.scoring.*;
 
@@ -7,7 +8,7 @@ public class MobilizeQualifier extends Qualifier {
     public MobilizeQualifier(Context context, Action action) {
         super(context, action);
         addWeightScorer(new FriendlinessScorer());
-        addWeightScorer(new RipenessScorer(5));
+        addWeightScorer(new RipenessScorer(8));
         addWeightScorer(new Scorer() {
             @Override
             public double score(Context context, Action action) {

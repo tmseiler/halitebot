@@ -1,4 +1,4 @@
-package ai.scoring;
+package ai;
 
 import game.*;
 
@@ -10,12 +10,14 @@ public class Context {
     public final GameMap gameMap;
     public final ArrayList<Location> friendlyBoundaries;
     public final int myID;
+    public GameMap projectionMap;
 
-    public Context(Location agentLocation, GameMap gameMap, ArrayList<Location> friendlyBoundaries, int myID) {
+    public Context(Location agentLocation, GameMap gameMap, ArrayList<Location> friendlyBoundaries, int myID, GameMap projectionMap) {
         this.agentLocation = agentLocation;
         this.gameMap = gameMap;
         this.friendlyBoundaries = friendlyBoundaries;
         this.myID = myID;
+        this.projectionMap = projectionMap;
     }
 
     public ArrayList<Location> getAgentNeighbors() {

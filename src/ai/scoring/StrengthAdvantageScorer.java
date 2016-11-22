@@ -1,11 +1,10 @@
 package ai.scoring;
 
 
+import ai.Context;
 import ai.actions.Action;
 import game.GameMap;
 import game.Site;
-
-import static util.Logger.out;
 
 public class StrengthAdvantageScorer implements Scorer {
 

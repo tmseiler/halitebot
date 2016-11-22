@@ -3,7 +3,8 @@ package game;
 import java.util.ArrayList;
 public class GameMap{
     public ArrayList< ArrayList<Site> > contents;
-    public int width, height;
+    public int width;
+    public int height;
     public static final int MAX_PRODUCTION = 16;
     public static final int MAX_SIZE = 50;
     public static final int MAX_DISTANCE = 2 * MAX_SIZE;
@@ -96,5 +97,26 @@ public class GameMap{
 
     public Site getSite(Location loc) {
         return contents.get(loc.y).get(loc.x);
+    }
+
+    public void evaluateMove(int playerId, Move evaluatedMove) {
+        if(evaluatedMove.dir == Direction.STILL)
+            return;
+
+        Site startingSite = getSite(evaluatedMove.loc);
+        Site targetSite = getSite(evaluatedMove.loc, evaluatedMove.dir);
+        if(targetSite.owner == playerId) {
+            targetSite.strength = Math.max(targetSite.strength + startingSite.strength, MAX_STRENGTH);
+        } else {
+            if(startingSite.strength < targetSite.strength) {
+                targetSite.strength = targetSite.strength - startingSite.strength;
+            } else if(startingSite.strength > targetSite.strength) {
+                targetSite.strength = startingSite.strength - targetSite.strength;
+                targetSite.owner = playerId;
+            } else {
+                targetSite.strength = 0;
+            }
+        }
+        startingSite.strength = 0;
     }
 }

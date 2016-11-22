@@ -1,12 +1,10 @@
 package ai.qualifiers;
 
 import ai.actions.Action;
-import ai.scoring.Context;
+import ai.Context;
 import ai.scoring.Scorer;
 
 import java.util.ArrayList;
-
-import static util.Logger.out;
 
 public class Qualifier {
     protected Context context;

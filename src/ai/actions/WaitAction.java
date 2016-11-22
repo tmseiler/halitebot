@@ -1,6 +1,6 @@
 package ai.actions;
 
-import ai.scoring.Context;
+import ai.Context;
 import game.*;
 
 public class WaitAction implements Action {

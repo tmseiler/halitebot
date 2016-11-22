@@ -1,6 +1,6 @@
 package ai.actions;
 
-import ai.scoring.Context;
+import ai.Context;
 import game.Direction;
 import game.Location;
 import game.Move;

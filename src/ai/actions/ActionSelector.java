@@ -1,7 +1,7 @@
 package ai.actions;
 
 import ai.qualifiers.Qualifier;
-import ai.scoring.Context;
+import ai.Context;
 import game.Move;
 
 import java.util.ArrayList;

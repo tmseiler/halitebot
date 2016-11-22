@@ -1,9 +1,10 @@
 import ai.actions.MoveAction;
 import ai.actions.WaitAction;
-import ai.scoring.AttackQualifier;
+import ai.qualifiers.AttackQualifier;
 import ai.actions.ActionSelector;
 import ai.scoring.Context;
-import ai.scoring.MobilizeQualifier;
+import ai.qualifiers.MobilizeQualifier;
+import ai.qualifiers.ReinforceQualifier;
 import game.*;
 
 import static util.Logger.out;
@@ -60,6 +61,7 @@ class HaliteBot {
                 ActionSelector selector = new ActionSelector(context, new WaitAction(context));
                 for (Direction direction : Direction.CARDINALS) {
                     selector.add(new AttackQualifier(context, new MoveAction(context, direction)));
+                    selector.add(new ReinforceQualifier(context, new MoveAction(context, direction)));
                     selector.add(new MobilizeQualifier(context, new MoveAction(context, direction)));
                 }
 
@@ -74,16 +76,7 @@ class HaliteBot {
         return site.owner == myID;
     }
 
-    private boolean hasFriendlyNeighbor(Location location) {
-        for (Direction d : Direction.CARDINALS) {
-            if (isFriendly(gameMap.getSite(location, d)))
-                return true;
-        }
-        return false;
-    }
-
     private boolean isBoundary(Location location) {
-        Site friendlySite = gameMap.getSite(location);
         for (Direction d : Direction.CARDINALS) {
             if (!isFriendly(gameMap.getSite(location, d)))
                 return true;

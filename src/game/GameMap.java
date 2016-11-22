@@ -4,6 +4,7 @@ import java.util.ArrayList;
 public class GameMap{
     public ArrayList< ArrayList<Site> > contents;
     public int width, height;
+    public static final int MAX_PRODUCTION = 16;
     public static final int MAX_SIZE = 50;
     public static final int MAX_DISTANCE = 2 * MAX_SIZE;
     public static final int MAX_STRENGTH = 255;

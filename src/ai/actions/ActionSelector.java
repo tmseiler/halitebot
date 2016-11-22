@@ -1,6 +1,6 @@
 package ai.actions;
 
-import ai.scoring.Qualifier;
+import ai.qualifiers.Qualifier;
 import ai.scoring.Context;
 import game.Move;
 

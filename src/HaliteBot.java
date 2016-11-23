@@ -5,6 +5,7 @@ import ai.actions.ActionSelector;
 import ai.Context;
 import ai.qualifiers.MobilizeQualifier;
 import ai.qualifiers.ReinforceQualifier;
+import ai.qualifiers.WaitQualifier;
 import game.*;
 
 import static util.Logger.out;

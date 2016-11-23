@@ -11,8 +11,6 @@ public class AttackQualifier extends Qualifier {
         addWeightScorer(new StrengthCostScorer());
         addWeightScorer(new CollisionScorer());
         addWeightScorer(new EnemynessScorer());
-        addWeightScorer(new ClusterValueScorer());
         addWeightScorer(new StrengthAdvantageScorer());
-
     }
 }

@@ -49,7 +49,7 @@ class HaliteBot {
                             friendlyBoundaries.add(location);
                     } else {
                         // calculate desirability based on neighbors (poor man's clustering)
-                        site.clusterAcquisitionScore = 0;
+                        site.clusterAcquisitionScore = site.strength;
                         for (Direction d : Direction.CARDINALS) {
                             Site neighborSite = gameMap.getSite(location, d);
                             if (!isFriendly(neighborSite)) {

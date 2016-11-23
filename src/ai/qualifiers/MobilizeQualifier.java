@@ -8,6 +8,7 @@ public class MobilizeQualifier extends Qualifier {
     public MobilizeQualifier(Context context, Action action) {
         super(context, action);
         addWeightScorer(new FriendlinessScorer());
+        addWeightScorer(new CollisionScorer());
         addWeightScorer(new RipenessScorer(8));
         addWeightScorer(new Scorer() {
             @Override

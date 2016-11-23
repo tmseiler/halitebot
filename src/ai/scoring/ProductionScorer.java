@@ -9,6 +9,6 @@ public class ProductionScorer implements Scorer {
     @Override
     public double score(Context context, Action action) {
         Site targetSite = action.getTargetSite();
-        return (Math.max(targetSite.production, 1)) / (double)GameMap.MAX_PRODUCTION;
+        return targetSite.production / (double)GameMap.MAX_PRODUCTION;
     }
 }

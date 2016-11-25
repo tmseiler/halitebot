@@ -82,6 +82,10 @@ public class GameMap{
         return l;
     }
 
+    public Location getLocation(Location loc, Direction d1, Direction d2) {
+        return getLocation(getLocation(loc, d1), d2);
+    }
+
     public ArrayList<Location> getNeighbors(Location loc) {
         ArrayList<Location> neighbors = new ArrayList<>(0);
         for (Direction d : Direction.CARDINALS)  {

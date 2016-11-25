@@ -7,6 +7,6 @@ import game.GameMap;
 public class ClusterValueScorer implements Scorer {
     @Override
     public double score(Context context, Action action) {
-        return (Math.max(action.getTargetSite().clusterAcquisitionScore, 1)) / (5 * GameMap.MAX_PRODUCTION);
+        return (Math.max(action.getTargetSite().clusterAcquisitionScore, 1)) / (9 * GameMap.MAX_PRODUCTION);
     }
 }

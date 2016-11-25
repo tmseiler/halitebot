@@ -49,9 +49,18 @@ class HaliteBot {
                             friendlyBoundaries.add(location);
                     } else {
                         // calculate desirability based on neighbors (poor man's clustering)
+                        ArrayList<Location> allNeighbors = new ArrayList<>(0);
                         site.clusterAcquisitionScore = site.strength;
                         for (Direction d : Direction.CARDINALS) {
-                            Site neighborSite = gameMap.getSite(location, d);
+                            allNeighbors.add(gameMap.getLocation(location, d));
+                        }
+                        allNeighbors.add(gameMap.getLocation(location, Direction.EAST, Direction.NORTH));
+                        allNeighbors.add(gameMap.getLocation(location, Direction.EAST, Direction.SOUTH));
+                        allNeighbors.add(gameMap.getLocation(location, Direction.WEST, Direction.NORTH));
+                        allNeighbors.add(gameMap.getLocation(location, Direction.WEST, Direction.SOUTH));
+
+                        for (Location neighbor : allNeighbors) {
+                            Site neighborSite = gameMap.getSite(neighbor);
                             if (!isFriendly(neighborSite)) {
                                 site.clusterAcquisitionScore += neighborSite.individualAcquisitionScore();
                             }
@@ -64,6 +73,8 @@ class HaliteBot {
                 out.printf("\n%s\n", friendlyLoc);
                 Context context = new Context(friendlyLoc, gameMap, friendlyBoundaries, myID, projectionMap);
                 ActionSelector selector = new ActionSelector(context, new WaitAction(context));
+//                selector.add(new WaitQualifier(context, new MoveAction(context, Direction.STILL)));
+
                 for (Direction direction : Direction.CARDINALS) {
                     selector.add(new AttackQualifier(context, new MoveAction(context, direction)));
                     selector.add(new ReinforceQualifier(context, new MoveAction(context, direction)));

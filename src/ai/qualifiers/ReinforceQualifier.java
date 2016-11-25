@@ -11,7 +11,7 @@ public class ReinforceQualifier extends Qualifier {
         addWeightScorer(new RipenessScorer(5));
         addWeightScorer(new CollisionScorer());
         addWeightScorer(new FriendlinessScorer());
-        addWeightScorer(new ClusterValueScorer());
+        addWeightScorer(new StrengthAdvantageScorer(true));
         addWeightScorer(new Scorer(){
             @Override
             public double score(Context context, Action action) {
@@ -22,6 +22,6 @@ public class ReinforceQualifier extends Qualifier {
             }
         });
 
-        addScorer(new StrengthAdvantageScorer(true));
+        addScorer(new ClusterValueScorer());
     }
 }

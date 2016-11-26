@@ -1,3 +1,4 @@
+import ai.actions.Action;
 import ai.actions.MoveAction;
 import ai.actions.WaitAction;
 import ai.qualifiers.AttackQualifier;
@@ -25,7 +26,7 @@ class HaliteBot {
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        Networking.sendInit("Dahlia mk6");
+        Networking.sendInit("Dahlia mk7");
 
         while (true) {
             ArrayList<Move> moves = new ArrayList<>();
@@ -72,18 +73,39 @@ class HaliteBot {
             for (Location friendlyLoc : friendlyLocations) {
                 out.printf("\n%s\n", friendlyLoc);
                 Context context = new Context(friendlyLoc, gameMap, friendlyBoundaries, myID, projectionMap);
-                ActionSelector selector = new ActionSelector(context, new WaitAction(context));
-//                selector.add(new WaitQualifier(context, new MoveAction(context, Direction.STILL)));
+                ArrayList<ActionSelector> selectors = new ArrayList<>(0);
+
+                ActionSelector mobilizationSelector = new ActionSelector(context, new WaitAction(context));
+                ActionSelector attackSelector = new ActionSelector(context, null);
+                ActionSelector waitSelector = new ActionSelector(context, null);
+                waitSelector.add(new WaitQualifier(context, new MoveAction(context, Direction.STILL)));
+
+                selectors.add(attackSelector);
+                selectors.add(waitSelector);
+                selectors.add(mobilizationSelector);
 
                 for (Direction direction : Direction.CARDINALS) {
-                    selector.add(new AttackQualifier(context, new MoveAction(context, direction)));
-                    selector.add(new ReinforceQualifier(context, new MoveAction(context, direction)));
-                    selector.add(new MobilizeQualifier(context, new MoveAction(context, direction)));
+                    attackSelector.add(new AttackQualifier(context, new MoveAction(context, direction)));
+                    mobilizationSelector.add(new ReinforceQualifier(context, new MoveAction(context, direction)));
+                    mobilizationSelector.add(new MobilizeQualifier(context, new MoveAction(context, direction)));
                 }
 
-                Move evaluatedMove = selector.evaluate();
-                projectionMap.evaluateMove(myID, evaluatedMove);
-                moves.add(evaluatedMove);
+                Move decidedMove = null;
+                for (ActionSelector selector : selectors) {
+                    Move evaluatedMove = selector.evaluate();
+                    if(evaluatedMove != null) {
+                        decidedMove = evaluatedMove;
+                        break;
+                    }
+                }
+
+                if(decidedMove == null) {
+                    out.printf("%s Performing default action.\n", context.agentLocation);
+                    decidedMove = new WaitAction(context).perform();
+                }
+
+                projectionMap.evaluateMove(myID, decidedMove);
+                moves.add(decidedMove);
             }
             out.printf("Moves: %s\n", moves);
             Networking.sendFrame(moves);

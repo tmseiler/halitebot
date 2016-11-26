@@ -37,11 +37,6 @@ public class ActionSelector {
             }
         }
         out.printf("Best qualifier is now %s (%s)\n", bestQualifier, bestScore);
-
-        if(bestMove == null || bestScore == 0) {
-            out.printf("%s Performing default action.\n", context.agentLocation);
-            bestMove = defaultAction.perform();
-        }
         return bestMove;
     }
 }

@@ -10,7 +10,7 @@ public class Logger {
     static {
 
         try {
-            out = new PrintWriter(new FileWriter("debugv6.log"), true);
+            out = new PrintWriter(new FileWriter("debugv7.log"), true);
         } catch (IOException e) {
             e.printStackTrace();
         }

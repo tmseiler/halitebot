@@ -2,7 +2,7 @@ package ai.qualifiers;
 
 import ai.Context;
 import ai.actions.Action;
-import ai.scoring.ProductionScorer;
+import ai.scoring.*;
 import game.Location;
 import game.Site;
 
@@ -18,7 +18,26 @@ public class WaitQualifier extends Qualifier {
                 bestSite = enemySite;
                 bestProd = enemySite.production;
         }
+        addWeightScorer(new BoundarynessScorer());
+        addWeightScorer(new StrengthCostScorer(bestSite));
+        addScorer(new ClusterValueScorer(bestSite));
+    }
 
-        addScorer(new ProductionScorer(bestSite));
+    public double getScore() {
+        double scoreSum = 0.0;
+        for (Scorer scorer: scorers) {
+            scoreSum += scorer.score(context, action);
+        }
+
+        double weightedScore = scoreSum / scorers.size();
+        for (Scorer weightedScorer : weightScorers) {
+            weightedScore *= weightedScorer.score(context, action);
+        }
+
+        if(weightedScore > .50) {
+            return weightedScore;
+        } else {
+            return 0.0;
+        }
     }
 }

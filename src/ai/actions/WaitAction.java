@@ -17,27 +17,19 @@ public class WaitAction implements Action {
                 '}';
     }
 
-    public double getScore() {
-        double score = 1.0;
-        Site site = context.gameMap.getSite(context.agentLocation);
-        if(site.strength == 0) score += 100;
-        if(site.strength < (site.production * 3)) score += 25;
-        return score;
-    }
-
     @Override
     public Direction getTargetDirection() {
-        return null;
+        return Direction.STILL;
     }
 
     @Override
     public Location getTarget() {
-        return null;
+        return context.agentLocation;
     }
 
     @Override
     public Site getTargetSite() {
-        return null;
+        return context.gameMap.getSite(context.agentLocation);
     }
 
     @Override

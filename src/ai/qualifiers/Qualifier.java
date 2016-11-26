@@ -31,14 +31,11 @@ public class Qualifier {
         double scoreSum = 0.0;
         for (Scorer scorer: scorers) {
             scoreSum += scorer.score(context, action);
-//            out.printf("\tscoreSum is now %s\n", scoreSum);
         }
         double weightedScore = scoreSum / scorers.size();
-//        out.printf("\tweightedScore is %s before weighting\n", weightedScore);
         for (Scorer weightedScorer : weightScorers) {
             weightedScore *= weightedScorer.score(context, action);
         }
-//        out.printf("\tweightedScore is now %s after weighting\n", weightedScore);
         return weightedScore;
     }
 

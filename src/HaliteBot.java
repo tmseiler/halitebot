@@ -26,7 +26,7 @@ class HaliteBot {
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        Networking.sendInit("Dahlia mk8");
+        Networking.sendInit("Dahlia mk9");
 
         while (true) {
             ArrayList<Move> moves = new ArrayList<>();

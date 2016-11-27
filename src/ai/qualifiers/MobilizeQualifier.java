@@ -9,6 +9,7 @@ public class MobilizeQualifier extends Qualifier {
         super(context, action);
         addWeightScorer(new FriendlinessScorer());
         addWeightScorer(new CollisionScorer());
+        addWeightScorer(new BoundaryProximityScorer());
         addWeightScorer(new RipenessScorer(8));
         addWeightScorer(new Scorer() {
             @Override
@@ -19,6 +20,6 @@ public class MobilizeQualifier extends Qualifier {
                     return 1.0;
             }
         });
-        addScorer(new BoundaryProximityScorer());
+        addScorer(new DiffusionClimberScorer());
     }
 }

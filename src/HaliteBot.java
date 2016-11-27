@@ -26,7 +26,7 @@ class HaliteBot {
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        Networking.sendInit("Dahlia mk7");
+        Networking.sendInit("Dahlia mk8");
 
         while (true) {
             ArrayList<Move> moves = new ArrayList<>();
@@ -44,35 +44,20 @@ class HaliteBot {
                 for (int x = 0; x < gameMap.width; x++) {
                     Location location = new Location(x, y);
                     Site site = gameMap.getSite(location);
-                    if (isFriendly(site)) {
+                    site.isFriendly = isFriendly(site);
+                    if (site.isFriendly) {
                         friendlyLocations.add(location);
                         if (isBoundary(location))
                             friendlyBoundaries.add(location);
-                    } else {
-                        // calculate desirability based on neighbors (poor man's clustering)
-                        ArrayList<Location> allNeighbors = new ArrayList<>(0);
-                        site.clusterAcquisitionScore = site.strength;
-                        for (Direction d : Direction.CARDINALS) {
-                            allNeighbors.add(gameMap.getLocation(location, d));
-                        }
-                        allNeighbors.add(gameMap.getLocation(location, Direction.EAST, Direction.NORTH));
-                        allNeighbors.add(gameMap.getLocation(location, Direction.EAST, Direction.SOUTH));
-                        allNeighbors.add(gameMap.getLocation(location, Direction.WEST, Direction.NORTH));
-                        allNeighbors.add(gameMap.getLocation(location, Direction.WEST, Direction.SOUTH));
-
-                        for (Location neighbor : allNeighbors) {
-                            Site neighborSite = gameMap.getSite(neighbor);
-                            if (!isFriendly(neighborSite)) {
-                                site.clusterAcquisitionScore += neighborSite.individualAcquisitionScore();
-                            }
-                        }
                     }
                 }
             }
 
+            DiffusionMap diffusionMap = new DiffusionMap(gameMap);
+
             for (Location friendlyLoc : friendlyLocations) {
-                out.printf("\n%s\n", friendlyLoc);
-                Context context = new Context(friendlyLoc, gameMap, friendlyBoundaries, myID, projectionMap);
+                out.printf("\n%s (%s strength)\n", friendlyLoc, gameMap.getSite(friendlyLoc).strength);
+                Context context = new Context(friendlyLoc, gameMap, friendlyBoundaries, myID, projectionMap, diffusionMap);
                 ArrayList<ActionSelector> selectors = new ArrayList<>(0);
 
                 ActionSelector mobilizationSelector = new ActionSelector(context, new WaitAction(context));
@@ -93,13 +78,13 @@ class HaliteBot {
                 Move decidedMove = null;
                 for (ActionSelector selector : selectors) {
                     Move evaluatedMove = selector.evaluate();
-                    if(evaluatedMove != null) {
+                    if (evaluatedMove != null) {
                         decidedMove = evaluatedMove;
                         break;
                     }
                 }
 
-                if(decidedMove == null) {
+                if (decidedMove == null) {
                     out.printf("%s Performing default action.\n", context.agentLocation);
                     decidedMove = new WaitAction(context).perform();
                 }

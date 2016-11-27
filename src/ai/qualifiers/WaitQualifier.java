@@ -6,26 +6,42 @@ import ai.scoring.*;
 import game.Location;
 import game.Site;
 
+
 public class WaitQualifier extends Qualifier {
     public WaitQualifier(Context context, Action action) {
         super(context, action);
-        int bestProd = 0;
-        Site bestSite = null;
 
-        for (Location enemyNeighbor : context.getAgentEnemyNeighbors()) {
-            Site enemySite = context.gameMap.getSite(enemyNeighbor);
-            if(enemySite.production > bestProd)
-                bestSite = enemySite;
-                bestProd = enemySite.production;
+        double bestScore = 0.0;
+        for (Location neighbor : context.getAgentNeighbors()) {
+            Site site = context.gameMap.getSite(neighbor);
+            double score;
+            if(site.isFriendly) {
+                score = context.diffusionMap.getValue(neighbor);
+                if(score > bestScore) {
+                    bestScore = score;
+                }
+            }
         }
+
+        final double finalBestScore = bestScore;
+        addScorer(new Scorer() {
+            @Override
+            public double score(Context context, Action action) {
+                if(finalBestScore > context.diffusionMap.getValue(context.agentLocation)) {
+                    return 0.0;
+                } else {
+                    return 1.0;
+                }
+            }
+        });
+
         addWeightScorer(new BoundarynessScorer());
-        addWeightScorer(new StrengthCostScorer(bestSite));
-        addScorer(new ClusterValueScorer(bestSite));
+//        addScorer(new DiffusionClimberScorer());
     }
 
     public double getScore() {
         double scoreSum = 0.0;
-        for (Scorer scorer: scorers) {
+        for (Scorer scorer : scorers) {
             scoreSum += scorer.score(context, action);
         }
 
@@ -34,7 +50,7 @@ public class WaitQualifier extends Qualifier {
             weightedScore *= weightedScorer.score(context, action);
         }
 
-        if(weightedScore > .50) {
+        if (weightedScore > .25) {
             return weightedScore;
         } else {
             return 0.0;

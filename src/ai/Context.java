@@ -11,13 +11,15 @@ public class Context {
     public final ArrayList<Location> friendlyBoundaries;
     public final int myID;
     public GameMap projectionMap;
+    public DiffusionMap diffusionMap;
 
-    public Context(Location agentLocation, GameMap gameMap, ArrayList<Location> friendlyBoundaries, int myID, GameMap projectionMap) {
+    public Context(Location agentLocation, GameMap gameMap, ArrayList<Location> friendlyBoundaries, int myID, GameMap projectionMap, DiffusionMap diffusionMap) {
         this.agentLocation = agentLocation;
         this.gameMap = gameMap;
         this.friendlyBoundaries = friendlyBoundaries;
         this.myID = myID;
         this.projectionMap = projectionMap;
+        this.diffusionMap = diffusionMap;
     }
 
     public ArrayList<Location> getAgentNeighbors() {

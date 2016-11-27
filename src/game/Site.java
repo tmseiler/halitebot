@@ -4,9 +4,9 @@ public class Site {
     public int owner;
     public int strength;
     public int production;
+    public boolean isFriendly;
 
     public double strengthProductionIndex;
-    public double bolsterScore;
 
     public double clusterAcquisitionScore;
 

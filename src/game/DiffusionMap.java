@@ -38,13 +38,13 @@ public class DiffusionMap {
         for (int y = 0; y < gameMap.height; y++) {
             for (int x = 0; x < gameMap.width; x++) {
                 double cellVal = 0.0;
-                cellVal += map[getIndex(y + 1, gameMap.height)][getIndex(x, gameMap.width)] - map[y][x];
-                cellVal += map[getIndex(y - 1, gameMap.height)][getIndex(x, gameMap.width)] - map[y][x];
-                cellVal += map[getIndex(y, gameMap.height)][getIndex(x + 1, gameMap.width)] - map[y][x];
-                cellVal += map[getIndex(y, gameMap.height)][getIndex(x - 1, gameMap.width)] - map[y][x];
+                cellVal += map[getIndex(x + 1, gameMap.width)][getIndex(y, gameMap.height)] - map[x][y];
+                cellVal += map[getIndex(x - 1, gameMap.width)][getIndex(y, gameMap.height)] - map[x][y];
+                cellVal += map[getIndex(x, gameMap.width)][getIndex(y + 1, gameMap.height)] - map[x][y];
+                cellVal += map[getIndex(x, gameMap.width)][getIndex(y - 1, gameMap.height)] - map[x][y];
                 cellVal *= coefficient;
-                cellVal += map[y][x];
-                newmap[y][x] = cellVal;
+                cellVal += map[x][y];
+                newmap[x][y] = cellVal;
             }
         }
         this.map = newmap;

@@ -26,7 +26,7 @@ class HaliteBot {
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        Networking.sendInit("Dahlia mk9");
+        Networking.sendInit("Dahlia mk10");
 
         while (true) {
             ArrayList<Move> moves = new ArrayList<>();
@@ -61,7 +61,7 @@ class HaliteBot {
                 ArrayList<ActionSelector> selectors = new ArrayList<>(0);
 
                 ActionSelector mobilizationSelector = new ActionSelector(context, new WaitAction(context));
-                ActionSelector attackSelector = new ActionSelector(context, null);
+                ActionSelector attackSelector = new ActionSelector(context, new MoveAction(context, Direction.STILL));
                 ActionSelector waitSelector = new ActionSelector(context, null);
                 waitSelector.add(new WaitQualifier(context, new MoveAction(context, Direction.STILL)));
 

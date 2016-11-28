@@ -27,6 +27,9 @@ public class DiffusionClimberScorer implements Scorer {
         else
             loc = targetLoc;
 
+        if(context.diffusionMap.getValue(loc) < context.diffusionMap.getValue(context.agentLocation))
+            return 0.0;
+
         double unnormalizedValue = Math.pow(Math.max(context.diffusionMap.getValue(loc), .001), COEFFICIENT);
         return unnormalizedValue / Math.pow(GameMap.MAX_PRODUCTION, COEFFICIENT);
     }

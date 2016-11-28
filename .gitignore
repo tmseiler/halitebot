@@ -1,3 +1,5 @@
 .idea
 HaliteBot.iml
 out/
+*.zip
+v*/

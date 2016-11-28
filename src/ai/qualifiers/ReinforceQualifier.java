@@ -11,7 +11,6 @@ public class ReinforceQualifier extends Qualifier {
         addWeightScorer(new CollisionScorer());
         addWeightScorer(new RipenessScorer(5));
         addWeightScorer(new BoundarynessScorer());
-//        addWeightScorer(new StrengthAdvantageScorer(true));
         addScorer(new DiffusionClimberScorer());
     }
 }

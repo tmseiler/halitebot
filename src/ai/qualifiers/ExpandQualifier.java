@@ -4,10 +4,10 @@ import ai.Context;
 import ai.actions.Action;
 import ai.scoring.*;
 
-public class AttackQualifier extends Qualifier {
-    public AttackQualifier(Context context, Action action) {
+public class ExpandQualifier extends Qualifier {
+    public ExpandQualifier(Context context, Action action) {
         super(context, action);
-        addScorer(new DiffusionClimberScorer());
+        addScorer(new DiffusionClimberScorer(context.acquisitionMap));
         addWeightScorer(new StrengthCostScorer());
         addWeightScorer(new CollisionScorer());
         addWeightScorer(new EnemynessScorer());

@@ -9,6 +9,7 @@ public class GameMap{
     public static final int MAX_SIZE = 50;
     public static final int MAX_DISTANCE = 2 * MAX_SIZE;
     public static final int MAX_STRENGTH = 255;
+    public static final int NEUTRAL_OWNER = 0;
 
     public GameMap() {
         width = 0;

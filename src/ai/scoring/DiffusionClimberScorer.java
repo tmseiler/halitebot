@@ -2,21 +2,17 @@ package ai.scoring;
 
 import ai.Context;
 import ai.actions.Action;
+import game.DiffusionMap;
 import game.GameMap;
 import game.Location;
-import game.Site;
 
 public class DiffusionClimberScorer implements Scorer {
     private static double COEFFICIENT = 0.3;
     private Location targetLoc;
+    private DiffusionMap diffusionMap;
 
-
-    public DiffusionClimberScorer(Location bestLoc) {
-        targetLoc = bestLoc;
-    }
-
-    public DiffusionClimberScorer() {
-        targetLoc = null;
+    public DiffusionClimberScorer(DiffusionMap diffusionMap) {
+        this.diffusionMap = diffusionMap;
     }
 
     @Override
@@ -27,10 +23,10 @@ public class DiffusionClimberScorer implements Scorer {
         else
             loc = targetLoc;
 
-        if(context.diffusionMap.getValue(loc) < context.diffusionMap.getValue(context.agentLocation))
+        if(diffusionMap.getValue(loc) < diffusionMap.getValue(context.agentLocation))
             return 0.0;
 
-        double unnormalizedValue = Math.pow(Math.max(context.diffusionMap.getValue(loc), .001), COEFFICIENT);
+        double unnormalizedValue = Math.pow(Math.max(diffusionMap.getValue(loc), .001), COEFFICIENT);
         return unnormalizedValue / Math.pow(GameMap.MAX_PRODUCTION, COEFFICIENT);
     }
 }

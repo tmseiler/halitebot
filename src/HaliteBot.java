@@ -1,7 +1,6 @@
-import ai.actions.Action;
 import ai.actions.MoveAction;
 import ai.actions.WaitAction;
-import ai.qualifiers.AttackQualifier;
+import ai.qualifiers.ExpandQualifier;
 import ai.actions.ActionSelector;
 import ai.Context;
 import ai.qualifiers.MobilizeQualifier;
@@ -53,11 +52,46 @@ class HaliteBot {
                 }
             }
 
-            DiffusionMap diffusionMap = new DiffusionMap(gameMap);
+            DiffusionMap acquisitionMap = new DiffusionMap(gameMap, new DiffusionSeeder() {
+                @Override
+                public double[][] seedMap(GameMap gameMap) {
+                    double[][] newMap = new double[gameMap.width][gameMap.height];
+                    for (int y = 0; y < gameMap.height; y++) {
+                        for (int x = 0; x < gameMap.width; x++) {
+                            Site site = gameMap.getSite(new Location(x, y));
+                            if (site.isFriendly) {
+                                newMap[x][y] = 0.0;
+                            } else {
+                                newMap[x][y] = site.individualAcquisitionScore();
+                            }
+                        }
+                    }
+                    return newMap;
+                }
+            });
+
+            DiffusionMap enemyFrontierMap = new DiffusionMap(gameMap, new DiffusionSeeder() {
+                @Override
+                public double[][] seedMap(GameMap gameMap) {
+                    double[][] newMap = new double[gameMap.width][gameMap.height];
+                    for (int y = 0; y < gameMap.height; y++) {
+                        for (int x = 0; x < gameMap.width; x++) {
+                            Site site = gameMap.getSite(new Location(x, y));
+                            if ((!site.isFriendly) && site.owner != GameMap.NEUTRAL_OWNER) {
+                                newMap[x][y] = site.individualAcquisitionScore();
+                            } else {
+                                newMap[x][y] = 0.0;
+                            }
+                        }
+                    }
+                    return newMap;
+                }
+            });
 
             for (Location friendlyLoc : friendlyLocations) {
                 out.printf("\n%s (%s strength)\n", friendlyLoc, gameMap.getSite(friendlyLoc).strength);
-                Context context = new Context(friendlyLoc, gameMap, friendlyBoundaries, myID, projectionMap, diffusionMap);
+                Context context = new Context(friendlyLoc, gameMap, friendlyBoundaries,
+                        myID, projectionMap, acquisitionMap, enemyFrontierMap);
                 ArrayList<ActionSelector> selectors = new ArrayList<>(0);
 
                 ActionSelector mobilizationSelector = new ActionSelector(context, new WaitAction(context));
@@ -70,7 +104,7 @@ class HaliteBot {
                 selectors.add(mobilizationSelector);
 
                 for (Direction direction : Direction.CARDINALS) {
-                    attackSelector.add(new AttackQualifier(context, new MoveAction(context, direction)));
+                    attackSelector.add(new ExpandQualifier(context, new MoveAction(context, direction)));
                     mobilizationSelector.add(new ReinforceQualifier(context, new MoveAction(context, direction)));
                     mobilizationSelector.add(new MobilizeQualifier(context, new MoveAction(context, direction)));
                 }

@@ -11,15 +11,17 @@ public class Context {
     public final ArrayList<Location> friendlyBoundaries;
     public final int myID;
     public GameMap projectionMap;
-    public DiffusionMap diffusionMap;
+    public DiffusionMap acquisitionMap;
+    public DiffusionMap enemyFrontierMap;
 
-    public Context(Location agentLocation, GameMap gameMap, ArrayList<Location> friendlyBoundaries, int myID, GameMap projectionMap, DiffusionMap diffusionMap) {
+    public Context(Location agentLocation, GameMap gameMap, ArrayList<Location> friendlyBoundaries, int myID, GameMap projectionMap, DiffusionMap acquisitionMap, DiffusionMap enemyFrontierMap) {
         this.agentLocation = agentLocation;
         this.gameMap = gameMap;
         this.friendlyBoundaries = friendlyBoundaries;
         this.myID = myID;
         this.projectionMap = projectionMap;
-        this.diffusionMap = diffusionMap;
+        this.acquisitionMap = acquisitionMap;
+        this.enemyFrontierMap = enemyFrontierMap;
     }
 
     public ArrayList<Location> getAgentNeighbors() {

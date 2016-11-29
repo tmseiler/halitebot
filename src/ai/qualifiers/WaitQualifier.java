@@ -16,7 +16,7 @@ public class WaitQualifier extends Qualifier {
             Site site = context.gameMap.getSite(neighbor);
             double score;
             if(site.isFriendly) {
-                score = context.diffusionMap.getValue(neighbor);
+                score = context.acquisitionMap.getValue(neighbor);
                 if(score > bestScore) {
                     bestScore = score;
                 }
@@ -27,7 +27,7 @@ public class WaitQualifier extends Qualifier {
         addScorer(new Scorer() {
             @Override
             public double score(Context context, Action action) {
-                if(finalBestScore > context.diffusionMap.getValue(context.agentLocation)) {
+                if(finalBestScore > context.acquisitionMap.getValue(context.agentLocation)) {
                     return 0.0;
                 } else {
                     return 1.0;

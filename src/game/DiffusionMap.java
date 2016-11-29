@@ -6,30 +6,13 @@ public class DiffusionMap {
     private double[][] map;
     private GameMap gameMap;
 
-    public DiffusionMap(GameMap gameMap) {
+    public DiffusionMap(GameMap gameMap, DiffusionSeeder seeder) {
         this.gameMap = gameMap;
-        map = new double[gameMap.width][gameMap.height];
-        for (int y = 0; y < gameMap.height; y++) {
-            for (int x = 0; x < gameMap.width; x++) {
-                Site site = gameMap.getSite(new Location(x, y));
-                if(site.isFriendly) {
-                    map[x][y] = 0.0;
-                } else {
-                    map[x][y] = (float) site.individualAcquisitionScore();
-                }
-            }
-        }
-
+        this.map = seeder.seedMap(gameMap);
         int diffusionCount = Math.max(gameMap.width, gameMap.height) / 2;
         for (int i = 0; i < diffusionCount; i++) {
             diffuse();
         }
-//        for (int i = 0; i < gameMap.height; i++) {
-//            for (int j = 0; j < gameMap.width; j++) {
-//                out.printf("%-8.2f", map[i][j]);
-//            }
-//            out.printf("\n");
-//        }
     }
 
     private void diffuse() {
@@ -48,6 +31,15 @@ public class DiffusionMap {
             }
         }
         this.map = newmap;
+    }
+
+    public void printMap() {
+        for (int i = 0; i < gameMap.height; i++) {
+            for (int j = 0; j < gameMap.width; j++) {
+                out.printf("%-8.2f", map[i][j]);
+            }
+            out.printf("\n");
+        }
     }
 
     private static int getIndex(int index, int bounds) {

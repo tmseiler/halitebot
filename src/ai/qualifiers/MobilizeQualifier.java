@@ -20,6 +20,6 @@ public class MobilizeQualifier extends Qualifier {
                     return 1.0;
             }
         });
-        addScorer(new DiffusionClimberScorer());
+        addScorer(new DiffusionClimberScorer(context.acquisitionMap));
     }
 }

@@ -10,16 +10,15 @@ public class MobilizeQualifier extends Qualifier {
         addWeightScorer(new FriendlinessScorer());
         addWeightScorer(new CollisionScorer());
 //        addWeightScorer(new BoundaryProximityScorer());
-        addWeightScorer(new RipenessScorer(8));
         addWeightScorer(new Scorer() {
             @Override
             public double score(Context context, Action action) {
-                if (context.friendlyBoundaries.contains(context.agentLocation))
-                    return 0;
-                else
+                if (context.gameMap.getSite(context.agentLocation).strength > 175)
                     return 1.0;
+                else
+                    return 0;
             }
         });
-        addScorer(new DiffusionClimberScorer(context.acquisitionMap));
+        addScorer(new DiffusionClimberScorer(context.enemyFrontierMap));
     }
 }

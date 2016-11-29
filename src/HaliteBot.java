@@ -25,7 +25,7 @@ class HaliteBot {
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        Networking.sendInit("Dahlia mk10");
+        Networking.sendInit("Dahlia mk11");
 
         while (true) {
             ArrayList<Move> moves = new ArrayList<>();
@@ -95,17 +95,20 @@ class HaliteBot {
                 ArrayList<ActionSelector> selectors = new ArrayList<>(0);
 
                 ActionSelector mobilizationSelector = new ActionSelector(context, new WaitAction(context));
-                ActionSelector attackSelector = new ActionSelector(context, new MoveAction(context, Direction.STILL));
+                ActionSelector expandSelector = new ActionSelector(context, new MoveAction(context, Direction.STILL));
                 ActionSelector waitSelector = new ActionSelector(context, null);
+                ActionSelector reinforcementSelector = new ActionSelector(context, null);
                 waitSelector.add(new WaitQualifier(context, new MoveAction(context, Direction.STILL)));
 
-                selectors.add(attackSelector);
+                if((double)friendlyLocations.size() > (double)gameMap.width * gameMap.height / (double)8)
+                    selectors.add(mobilizationSelector);
+                selectors.add(expandSelector);
                 selectors.add(waitSelector);
-                selectors.add(mobilizationSelector);
+                selectors.add(reinforcementSelector);
 
                 for (Direction direction : Direction.CARDINALS) {
-                    attackSelector.add(new ExpandQualifier(context, new MoveAction(context, direction)));
-                    mobilizationSelector.add(new ReinforceQualifier(context, new MoveAction(context, direction)));
+                    expandSelector.add(new ExpandQualifier(context, new MoveAction(context, direction)));
+                    reinforcementSelector.add(new ReinforceQualifier(context, new MoveAction(context, direction)));
                     mobilizationSelector.add(new MobilizeQualifier(context, new MoveAction(context, direction)));
                 }
 

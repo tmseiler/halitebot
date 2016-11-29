@@ -9,6 +9,7 @@ public class ExpandQualifier extends Qualifier {
         super(context, action);
         addScorer(new DiffusionClimberScorer(context.acquisitionMap));
         addWeightScorer(new StrengthCostScorer());
+//        addWeightScorer(new RipenessScorer(2));
         addWeightScorer(new CollisionScorer());
         addWeightScorer(new EnemynessScorer());
         addWeightScorer(new StrengthAdvantageScorer());

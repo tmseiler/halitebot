@@ -9,7 +9,7 @@ public class MobilizeQualifier extends Qualifier {
         super(context, action);
         addWeightScorer(new FriendlinessScorer());
         addWeightScorer(new CollisionScorer());
-//        addWeightScorer(new BoundaryProximityScorer());
+
         addWeightScorer(new Scorer() {
             @Override
             public double score(Context context, Action action) {

@@ -1,11 +1,8 @@
 import ai.actions.MoveAction;
 import ai.actions.WaitAction;
-import ai.qualifiers.ExpandQualifier;
+import ai.qualifiers.*;
 import ai.actions.ActionSelector;
 import ai.Context;
-import ai.qualifiers.MobilizeQualifier;
-import ai.qualifiers.ReinforceQualifier;
-import ai.qualifiers.WaitQualifier;
 import game.*;
 
 import static util.Logger.out;
@@ -25,7 +22,7 @@ class HaliteBot {
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        Networking.sendInit("Dahlia mk11");
+        Networking.sendInit("Dahlia mk12");
 
         while (true) {
             ArrayList<Move> moves = new ArrayList<>();
@@ -94,19 +91,22 @@ class HaliteBot {
                         myID, projectionMap, acquisitionMap, enemyFrontierMap);
                 ArrayList<ActionSelector> selectors = new ArrayList<>(0);
 
-                ActionSelector mobilizationSelector = new ActionSelector(context, new WaitAction(context));
+                ActionSelector attackSelector = new ActionSelector(context, new MoveAction(context, Direction.STILL));
+                ActionSelector mobilizationSelector = new ActionSelector(context, new MoveAction(context, Direction.STILL));
                 ActionSelector expandSelector = new ActionSelector(context, new MoveAction(context, Direction.STILL));
                 ActionSelector waitSelector = new ActionSelector(context, null);
                 ActionSelector reinforcementSelector = new ActionSelector(context, null);
                 waitSelector.add(new WaitQualifier(context, new MoveAction(context, Direction.STILL)));
 
-                if((double)friendlyLocations.size() > (double)gameMap.width * gameMap.height / (double)8)
+                selectors.add(attackSelector);
+                if((double)friendlyLocations.size() > (double)gameMap.width * gameMap.height / 8.0)
                     selectors.add(mobilizationSelector);
                 selectors.add(expandSelector);
                 selectors.add(waitSelector);
                 selectors.add(reinforcementSelector);
 
                 for (Direction direction : Direction.CARDINALS) {
+                    attackSelector.add(new AttackQualifier(context, new MoveAction(context, direction)));
                     expandSelector.add(new ExpandQualifier(context, new MoveAction(context, direction)));
                     reinforcementSelector.add(new ReinforceQualifier(context, new MoveAction(context, direction)));
                     mobilizationSelector.add(new MobilizeQualifier(context, new MoveAction(context, direction)));

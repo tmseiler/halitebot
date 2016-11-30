@@ -11,7 +11,7 @@ public class Site {
     public double clusterAcquisitionScore;
 
     public double individualAcquisitionScore() {
-        strengthProductionIndex = (float) production / ((float) strength + 1);
+        strengthProductionIndex = (double) production * (double) production / Math.pow(strength + 1.0, 1.8);
         return strengthProductionIndex;
     }
 }

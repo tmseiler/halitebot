@@ -6,13 +6,16 @@ import game.Location;
 import game.Move;
 import game.Site;
 
-public class MoveAction implements Action {
-    private Context context;
-    public Direction direction;
+public class MoveTowardAction implements Action {
 
-    public MoveAction(Context context, Direction direction) {
+    private final Context context;
+    private final Location destination;
+    private Direction direction;
+
+    public MoveTowardAction(Context context, Location destination) {
         this.context = context;
-        this.direction = direction;
+        this.destination = destination;
+        direction = context.moveToward(context.agentLocation, destination, true);
     }
 
     @Override
@@ -20,34 +23,28 @@ public class MoveAction implements Action {
         return direction;
     }
 
+    @Override
     public Location getStep() {
         return context.gameMap.getLocation(context.agentLocation, getStepDirection());
     }
 
     @Override
     public Location getTarget() {
-        return context.gameMap.getLocation(context.agentLocation, direction);
+        return destination;
     }
 
     @Override
     public Site getTargetSite() {
-        return context.gameMap.getSite(getTarget());
+        return context.gameMap.getSite(destination);
     }
 
     @Override
     public Move perform() {
-        return new Move(context.agentLocation, direction);
+        return new Move(context.agentLocation, getStepDirection());
     }
 
     @Override
     public Site getStepSite() {
-        return getTargetSite();
-    }
-
-    @Override
-    public String toString() {
-        return "MoveAction{" +
-                "direction=" + direction +
-                '}';
+        return context.gameMap.getSite(getStep());
     }
 }

@@ -21,9 +21,7 @@ public class StrengthAdvantageScorer implements Scorer {
     @Override
     public double score(Context context, Action action) {
         Site agentSite = context.gameMap.getSite(context.agentLocation);
-        Site targetSite = context.gameMap.getSite(context.agentLocation, action.getTargetDirection());
-//        out.printf("\t\tagentSite(%s), targetSite(%s), %s\n", agentSite, targetSite, action.getTargetDirection());
-//        out.printf("\t\tfriendlyLocation is %s, enemyLocation is %s\n", context.agentLocation, action.getTarget());
+        Site targetSite = context.gameMap.getSite(context.agentLocation, action.getStepDirection());
 
         double score;
         if (invert)
@@ -31,7 +29,6 @@ public class StrengthAdvantageScorer implements Scorer {
         else
             score = (Math.max(agentSite.strength - targetSite.strength, 0)) / (double) GameMap.MAX_STRENGTH;
 
-//        out.printf("\t\tscore is %s (%s, %s)\n", score, agentSite.strength, targetSite.strength);
         return score;
     }
 }

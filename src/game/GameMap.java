@@ -1,5 +1,7 @@
 package game;
 
+import com.sun.tools.javac.code.Symbol;
+
 import java.util.ArrayList;
 public class GameMap{
     public ArrayList< ArrayList<Site> > contents;
@@ -118,6 +120,17 @@ public class GameMap{
             } else if(startingSite.strength > targetSite.strength) {
                 targetSite.strength = startingSite.strength - targetSite.strength;
                 targetSite.owner = playerId;
+                targetSite.isFriendly = true;
+                for (Location neighbor : getNeighbors(getLocation(evaluatedMove.loc, evaluatedMove.dir))) {
+                    Site s = getSite(neighbor);
+                    if((!s.isFriendly) && s.owner != GameMap.NEUTRAL_OWNER) {
+                        s.strength = Math.max(0, s.strength - targetSite.strength);
+                        if(s.strength == 0) {
+                            s.owner = GameMap.NEUTRAL_OWNER;
+                            s.isFriendly = false;
+                        }
+                    }
+                }
             } else {
                 targetSite.strength = 0;
             }

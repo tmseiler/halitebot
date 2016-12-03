@@ -18,8 +18,13 @@ public class WaitAction implements Action {
     }
 
     @Override
-    public Direction getTargetDirection() {
+    public Direction getStepDirection() {
         return Direction.STILL;
+    }
+
+    @Override
+    public Location getStep() {
+        return context.agentLocation;
     }
 
     @Override
@@ -35,5 +40,10 @@ public class WaitAction implements Action {
     @Override
     public Move perform() {
         return new Move(context.agentLocation, Direction.STILL);
+    }
+
+    @Override
+    public Site getStepSite() {
+        return context.gameMap.getSite(getStep());
     }
 }

@@ -22,7 +22,7 @@ public class StrengthAdvantageScorer implements Scorer {
     public double score(Context context, Action action) {
         Site agentSite = context.gameMap.getSite(context.agentLocation);
         Site targetSite = context.gameMap.getSite(context.agentLocation, action.getTargetDirection());
-//        out.printf("\t\tagentSite(%s), targetSite(%s), %s\n", agentSite, targetSite, action.getTargetDirection());
+//        out.printf("\t\tagentSite(%s), targetSite(%s), %s\n", agentSite, targetSite, action.getStepDirection());
 //        out.printf("\t\tfriendlyLocation is %s, enemyLocation is %s\n", context.agentLocation, action.getTarget());
 
         double score;

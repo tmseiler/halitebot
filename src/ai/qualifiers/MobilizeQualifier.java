@@ -13,12 +13,13 @@ public class MobilizeQualifier extends Qualifier {
         addWeightScorer(new Scorer() {
             @Override
             public double score(Context context, Action action) {
-                if (context.gameMap.getSite(context.agentLocation).strength > 175)
+                if (context.gameMap.getSite(context.agentLocation).strength > 200)
                     return 1.0;
                 else
                     return 0;
             }
         });
+
         addScorer(new DiffusionClimberScorer(context.enemyFrontierMap));
     }
 }

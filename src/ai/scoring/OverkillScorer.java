@@ -14,8 +14,8 @@ public class OverkillScorer implements Scorer {
         for (Location neighbor : context.gameMap.getNeighbors(action.getTarget())) {
             Site site = context.gameMap.getSite(neighbor);
             if( (!site.isFriendly) && site.owner != GameMap.NEUTRAL_OWNER)
-                damageSum += Math.min(site.strength, agentSite.strength);
+                damageSum += Math.min(agentSite.strength, site.strength);
         }
-        return damageSum / 4.0 * GameMap.MAX_STRENGTH;
+        return damageSum / 4.0 * (double)GameMap.MAX_STRENGTH;
     }
 }

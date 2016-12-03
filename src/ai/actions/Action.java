@@ -6,8 +6,11 @@ import game.Move;
 import game.Site;
 
 public interface Action {
-    Direction getTargetDirection();
+    Direction getStepDirection();
+    Location getStep();
     Location getTarget();
     Site getTargetSite();
     Move perform();
+
+    Site getStepSite();
 }

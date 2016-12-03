@@ -11,21 +11,25 @@ public class Context {
     public final ArrayList<Location> friendlyBoundaries;
     public final int myID;
     public GameMap projectionMap;
-    public DiffusionMap acquisitionMap;
+    public DiffusionMap expansionMap;
     public DiffusionMap enemyFrontierMap;
 
-    public Context(Location agentLocation, GameMap gameMap, ArrayList<Location> friendlyBoundaries, int myID, GameMap projectionMap, DiffusionMap acquisitionMap, DiffusionMap enemyFrontierMap) {
+    public Context(Location agentLocation, GameMap gameMap, ArrayList<Location> friendlyBoundaries, int myID, GameMap projectionMap, DiffusionMap expansionMap, DiffusionMap enemyFrontierMap) {
         this.agentLocation = agentLocation;
         this.gameMap = gameMap;
         this.friendlyBoundaries = friendlyBoundaries;
         this.myID = myID;
         this.projectionMap = projectionMap;
-        this.acquisitionMap = acquisitionMap;
+        this.expansionMap = expansionMap;
         this.enemyFrontierMap = enemyFrontierMap;
     }
 
     public ArrayList<Location> getAgentNeighbors() {
         return gameMap.getNeighbors(agentLocation);
+    }
+
+    public Location getBestBoundary() {
+        return friendlyBoundaries.get(0);
     }
 
     public ArrayList<Location> getAgentEnemyNeighbors() {
@@ -41,7 +45,7 @@ public class Context {
     }
 
     public Location findClosestBoundary() {
-        double minDistance = 10000000.00;
+        double minDistance = Double.MAX_VALUE;
         Location closestBoundary = null;
         double distance;
         for (Location boundaryLoc : friendlyBoundaries) {
@@ -57,13 +61,12 @@ public class Context {
         return closestBoundary;
     }
 
-    public Move moveToward(Location origin, Location destination, boolean friendlyOnly) {
-        Move move;
+    public Direction moveToward(Location origin, Location destination, boolean friendlyOnly) {
         Direction direction = Direction.STILL;
 
         ArrayList<Direction> possibleDirections = new ArrayList<>(0);
         if (destination == null)
-            return new Move(origin, Direction.STILL);
+            return Direction.STILL;
         if (destination.x > origin.x)
             possibleDirections.add(Direction.EAST);
         if (destination.y > origin.y)
@@ -80,6 +83,6 @@ public class Context {
             }
         }
 //        out.printf("moveToward %s to %s (%s)\n", origin, destination, direction);
-        return new Move(origin, direction);
+        return direction;
     }
 }

@@ -3,10 +3,12 @@ package game;
 public class Move {
     public Location loc;
     public Direction dir;
+    public int owner;
 
-    public Move(Location loc_, Direction dir_) {
+    public Move(Location loc_, Direction dir_, int owner) {
         loc = loc_;
         dir = dir_;
+        this.owner = owner;
     }
 
     @Override

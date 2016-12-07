@@ -20,7 +20,7 @@ public class RandomBot {
                     Site site = gameMap.getSite(new Location(x, y));
                     if(site.owner == myID) {
                         Direction dir = Direction.randomDirection();
-                        moves.add(new Move(new Location(x, y), dir));
+                        moves.add(new Move(new Location(x, y), dir, myID));
                     }
                 }
             }

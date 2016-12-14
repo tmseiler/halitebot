@@ -2,9 +2,7 @@ package ai;
 
 import game.*;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static util.Logger.out;
@@ -25,7 +23,6 @@ public class Context {
         this.projectionMap = projectionMap;
         this.expansionMap = expansionMap;
         this.enemyFrontierMap = enemyFrontierMap;
-        this.friendlyBoundaries.sort(Comparator.comparingDouble(expansionMap::getValue));
     }
 
     public Context(GameMap gameMap, ArrayList<Location> friendlyBoundaries, int myID, GameMap projectionMap, DiffusionMap expansionMap) {
@@ -99,7 +96,7 @@ public class Context {
         return possibleDirections;
     }
 
-    public Direction unfriendlyMoveToward(Location origin, Location destination) {
+    public Direction anyMoveToward(Location origin, Location destination) {
         List<Direction> directions = moveToward(origin, destination).stream()
                 .collect(Collectors.toList());
         if (directions.size() > 0) return directions.get(0);
@@ -125,16 +122,55 @@ public class Context {
         else return friendlyLoc;
     }
 
-    public Location climbFrontierMap(Location friendlyLoc) {
-        List<Location> targets = gameMap
-                .getNeighbors(friendlyLoc)
-                .stream()
-                .filter(neighbor -> {
-                    Site site = gameMap.getSite(neighbor);
-                    return isFriendly(site) || site.strength == 0;})
-                .sorted(Comparator.comparingDouble(enemyFrontierMap::getValue))
-                .collect(Collectors.toList());
-        if (targets.size() > 0) return targets.get(targets.size() - 1);
-        else return friendlyLoc;
+    public int getCost(Site site) {
+        if(isFriendly(site)) {
+            return 1 + site.production;
+        } else {
+            return 1 + site.strength;
+        }
+    }
+
+    public Location aStar(Location start, Location goal) {
+        Site startSite = gameMap.getSite(start);
+        if(start.equals(goal)) return start;
+
+        PriorityQueue<Site> frontier = new PriorityQueue<>(new AStarPrioritizer(this, goal));
+        frontier.add(startSite);
+
+        HashMap<Site, Integer> costSoFar = new HashMap<>();
+        HashMap<Site, Site> cameFrom = new HashMap<>();
+
+        costSoFar.put(startSite, 0);
+        cameFrom.put(startSite, null);
+
+        Site currentSite = startSite;
+        while(!frontier.isEmpty()) {
+            currentSite = frontier.remove();
+            if(currentSite.location.equals(goal)) break;
+//            if(gameMap.getDistance(start, currentSite.location) > 20.0) break;
+
+            for (Location nextLoc : projectionMap.getNeighbors(currentSite.location)) {
+                Site nextSite = gameMap.getSite(nextLoc);
+                int newCost = costSoFar.get(currentSite) + getCost(nextSite);
+                if((!costSoFar.containsKey(nextSite)) || newCost < costSoFar.get(nextSite) ) {
+                    costSoFar.put(nextSite, newCost);
+                    frontier.add(nextSite);
+                    cameFrom.put(nextSite, currentSite);
+                }
+            }
+        }
+
+        final ArrayList<Location> pathList = new ArrayList<>();
+        Site destination = currentSite;
+        pathList.add(destination.location);
+
+        while (cameFrom.containsKey(destination)) {
+            destination = cameFrom.get(destination);
+            if(destination != null && !destination.location.equals(start))
+                pathList.add(destination.location);
+        }
+        Collections.reverse(pathList);
+        out.printf("\tPath for %s -> %s: %s\n", start, goal, pathList);
+        return pathList.get(0);
     }
 }

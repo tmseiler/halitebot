@@ -3,3 +3,4 @@ HaliteBot.iml
 out/
 *.zip
 v*/
+*.log

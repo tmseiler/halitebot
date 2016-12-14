@@ -3,6 +3,8 @@ package game;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import static util.Logger.out;
+
 public class GameMap {
     public ArrayList<ArrayList<Site>> contents;
     public ArrayList<ArrayList<HashMap<Integer, Piece>>> movedPieces;
@@ -29,10 +31,32 @@ public class GameMap {
         for (int y = 0; y < height; y++) {
             ArrayList<Site> row = new ArrayList<>();
             for (int x = 0; x < width; x++) {
-                row.add(new Site());
+                Site site = new Site();
+                site.location = new Location(x, y);
+                row.add(site);
             }
             contents.add(row);
         }
+    }
+
+    public GameMap copy() {
+        GameMap retMap = new GameMap(width, height);
+        for (int y = 0; y < height; y++) {
+            ArrayList<Site> row = new ArrayList<>();
+            for (int x = 0; x < width; x++) {
+                Site s = new Site();
+                Location loc = new Location(x, y);
+                s.location = loc;
+                Site oldSite = getSite(loc);
+                s.strength = oldSite.strength;
+                s.production = oldSite.production;
+                s.owner = oldSite.owner;
+                s.isFriendly = oldSite.isFriendly;
+                row.add(s);
+            }
+            retMap.contents.set(y, row);
+        }
+        return retMap;
     }
 
     public boolean inBounds(Location loc) {
@@ -90,38 +114,6 @@ public class GameMap {
         return contents.get(loc.y).get(loc.x);
     }
 
-    public void evaluateMove(int playerId, Move evaluatedMove) {
-        if (evaluatedMove.dir == Direction.STILL)
-            return;
-
-        Site startingSite = getSite(evaluatedMove.loc);
-        Site targetSite = getSite(evaluatedMove.loc, evaluatedMove.dir);
-        if (targetSite.owner == playerId) {
-            targetSite.strength = Math.max(targetSite.strength + startingSite.strength, MAX_STRENGTH);
-        } else {
-            if (startingSite.strength < targetSite.strength) {
-                targetSite.strength = targetSite.strength - startingSite.strength;
-            } else if (startingSite.strength > targetSite.strength) {
-                targetSite.strength = startingSite.strength - targetSite.strength;
-                targetSite.owner = playerId;
-                targetSite.isFriendly = true;
-                for (Location neighbor : getNeighbors(getLocation(evaluatedMove.loc, evaluatedMove.dir))) {
-                    Site s = getSite(neighbor);
-                    if ((!s.isFriendly) && s.owner != GameMap.NEUTRAL_OWNER) {
-                        s.strength = Math.max(0, s.strength - targetSite.strength);
-                        if (s.strength == 0) {
-                            s.owner = GameMap.NEUTRAL_OWNER;
-                            s.isFriendly = false;
-                        }
-                    }
-                }
-            } else {
-                targetSite.strength = 0;
-            }
-        }
-        startingSite.strength = 0;
-    }
-
     private Piece getMovedPiece(Location loc, int owner) {
         return movedPieces.get(loc.y).get(loc.x).get(owner);
     }
@@ -135,7 +127,7 @@ public class GameMap {
         }
     }
 
-    private Piece getUnmovedPiece(int x, int y) {
+    private Piece getUnmovedPiece(int y, int x) {
         return unmovedPieces.get(y).get(x);
     }
 
@@ -143,7 +135,10 @@ public class GameMap {
         return getUnmovedPiece(loc.y, loc.x);
     }
 
-    public void performMoves(ArrayList<Move> moves) {
+    public int simulateTurn(int myID, ArrayList<Move> moves) {
+        int score = 0;
+        int myCount = 0;
+        int enemyCount = 0;
         movedPieces = new ArrayList<>();
         unmovedPieces = new ArrayList<>();
         // represent board as pieces
@@ -153,6 +148,8 @@ public class GameMap {
             for (int x = 0; x < width; x++) {
                 unresolvedRow.add(new HashMap<>());
                 Site s = getSite(new Location(x, y));
+                if(s.owner == myID) myCount += s.strength;
+                if(s.owner != myID && s.owner != NEUTRAL_OWNER) enemyCount += s.strength;
                 resolvedRow.add(new Piece(s.owner, s.strength));
             }
             movedPieces.add(unresolvedRow);
@@ -174,7 +171,7 @@ public class GameMap {
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 // add production to str, move to moved pieces
-                Piece unmovedPiece = getUnmovedPiece(x, y);
+                Piece unmovedPiece = getUnmovedPiece(y, x);
                 if (unmovedPiece != null) {
                     Location loc = new Location(x, y);
                     if (unmovedPiece.owner != NEUTRAL_OWNER) {
@@ -191,19 +188,23 @@ public class GameMap {
             for (int x = 0; x < width; x++) {
                 Location loc = new Location(x, y);
                 for (int ownerId : movedPieces.get(y).get(x).keySet()) {
+                    int damageDealt = 0;
                     Piece piece = getMovedPiece(loc, ownerId);
                     // for each direction
-                    damagePieces(piece, loc, true);
+                    damageDealt += damagePieces(piece, loc, true);
                     if (ownerId != NEUTRAL_OWNER) {
                         for (Direction d : Direction.CARDINALS) {
                             // apply damage to non-neutral enemies
-                            damagePieces(piece, getLocation(loc, d), false);
+                            damageDealt += damagePieces(piece, getLocation(loc, d), false);
                         }
                     }
+                    if(ownerId == myID) score += damageDealt;
                 }
             }
         }
 
+        int myResultCount = 0;
+        int enemyResultCount = 0;
         // resolve state
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
@@ -214,7 +215,8 @@ public class GameMap {
                     if (piece.strength > 0) {
                         site.strength = piece.strength;
                         site.owner = piece.owner;
-                        continue;
+                        if(site.owner == myID) score += 10;
+                        break;
                     }
                     if (piece.damageTaken > 0) {
                         site.owner = NEUTRAL_OWNER;
@@ -225,19 +227,39 @@ public class GameMap {
                 }
             }
         }
+        return score;
     }
 
-    private void damagePieces(Piece piece, Location target, boolean damageNeutrals) {
+    public int simulateTurn(int myID, Move move) {
+        ArrayList<Move> moves = new ArrayList<>();
+        moves.add(move);
+        return simulateTurn(myID, moves);
+    }
+
+    private int damagePieces(Piece piece, Location target, boolean damageNeutrals) {
+        int damageDealt = 0;
         for (Piece enemyPiece : getMovedPieces(target).values()) {
             if (enemyPiece.owner != piece.owner) {
                 if (enemyPiece.owner == NEUTRAL_OWNER && !damageNeutrals)
                     continue;
                 enemyPiece.damageTaken += piece.strength;
+                damageDealt += piece.strength;
             }
         }
+        return damageDealt;
     }
 
     private HashMap<Integer, Piece> getMovedPieces(Location loc) {
         return movedPieces.get(loc.y).get(loc.x);
+    }
+
+    public void printMap() {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                Site s = getSite(new Location(x, y));
+                out.printf("[%-2s %-4s]", s.owner, s.strength);
+            }
+            out.printf("\n");
+        }
     }
 }

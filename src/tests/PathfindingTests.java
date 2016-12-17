@@ -1,6 +1,6 @@
 package tests;
 
-import ai.Context;
+import ai.AStar;
 import game.GameMap;
 import game.Location;
 import game.Site;
@@ -14,8 +14,8 @@ public class PathfindingTests extends TestCase {
         Site s = gameMap.getSite(originLoc);
         s.owner = 1;
         s.strength = 100;
-        Context context = new Context(gameMap, null, 1, gameMap, null);
-        context.aStar(originLoc, goalLoc);
+        AStar a = new AStar(gameMap, 1);
+        a.aStar(originLoc, goalLoc);
     }
 
     public void testGoalIsNeighbor() {
@@ -26,8 +26,9 @@ public class PathfindingTests extends TestCase {
         s.strength = 100;
 
         Location goalLoc = new Location(0, 1);
-        Context context = new Context(gameMap, null, 1, gameMap, null);
-        Location step = context.aStar(originLoc, goalLoc);
+        AStar a = new AStar(gameMap, 1);
+
+        Location step = a.aStarFirstStep(originLoc, goalLoc);
         assertEquals(goalLoc, step);
 
     }
@@ -39,8 +40,9 @@ public class PathfindingTests extends TestCase {
         Site s = gameMap.getSite(originLoc);
         s.owner = 1;
         s.strength = 100;
-        Context context = new Context(gameMap, null, 1, gameMap, null);
-        Location result = context.aStar(originLoc, goalLoc);
+        AStar a = new AStar(gameMap, 1);
+
+        Location result = a.aStarFirstStep(originLoc, goalLoc);
         assertEquals(goalLoc, result);
     }
 

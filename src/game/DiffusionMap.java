@@ -7,7 +7,7 @@ public class DiffusionMap {
     private GameMap gameMap;
     private final boolean friendlyOnly;
 
-    public DiffusionMap(GameMap gameMap, DiffusionSeeder seeder, boolean friendlyOnly) {
+    public DiffusionMap(GameMap gameMap, boolean friendlyOnly, DiffusionSeeder seeder) {
         this.gameMap = gameMap;
         this.friendlyOnly = friendlyOnly;
         this.map = seeder.seedMap(gameMap);
@@ -18,7 +18,7 @@ public class DiffusionMap {
     }
 
     public DiffusionMap(GameMap gameMap, DiffusionSeeder seeder) {
-        this(gameMap, seeder, false);
+        this(gameMap, false, seeder);
     }
 
     private void diffuse() {

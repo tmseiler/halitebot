@@ -2,6 +2,8 @@ package game;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static util.Logger.out;
 
@@ -148,8 +150,8 @@ public class GameMap {
             for (int x = 0; x < width; x++) {
                 unresolvedRow.add(new HashMap<>());
                 Site s = getSite(new Location(x, y));
-                if(s.owner == myID) myCount += s.strength;
-                if(s.owner != myID && s.owner != NEUTRAL_OWNER) enemyCount += s.strength;
+                if (s.owner == myID) myCount += s.strength;
+                if (s.owner != myID && s.owner != NEUTRAL_OWNER) enemyCount += s.strength;
                 resolvedRow.add(new Piece(s.owner, s.strength));
             }
             movedPieces.add(unresolvedRow);
@@ -198,27 +200,31 @@ public class GameMap {
                             damageDealt += damagePieces(piece, getLocation(loc, d), false);
                         }
                     }
-                    if(ownerId == myID) score += damageDealt;
+                    if (ownerId == myID) {
+                        score += damageDealt;
+                    }
                 }
             }
         }
 
-        int myResultCount = 0;
-        int enemyResultCount = 0;
         // resolve state
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 Location loc = new Location(x, y);
                 for (Piece piece : getMovedPieces(loc).values()) {
                     piece.strength -= piece.damageTaken;
+                    if (piece.owner == myID) {
+                        score -= piece.damageTaken;
+                    }
                     Site site = getSite(loc);
                     if (piece.strength > 0) {
                         site.strength = piece.strength;
                         site.owner = piece.owner;
-                        if(site.owner == myID) score += 10;
+                        if (site.owner == myID) score += 5 * site.production;
                         break;
                     }
                     if (piece.damageTaken > 0) {
+                        if (site.owner != myID) score += 3 * site.production;
                         site.owner = NEUTRAL_OWNER;
                     } else {
                         site.owner = piece.owner;
@@ -243,7 +249,8 @@ public class GameMap {
                 if (enemyPiece.owner == NEUTRAL_OWNER && !damageNeutrals)
                     continue;
                 enemyPiece.damageTaken += piece.strength;
-                damageDealt += piece.strength;
+                if (enemyPiece.owner != NEUTRAL_OWNER)
+                    damageDealt += piece.strength;
             }
         }
         return damageDealt;
@@ -251,6 +258,14 @@ public class GameMap {
 
     private HashMap<Integer, Piece> getMovedPieces(Location loc) {
         return movedPieces.get(loc.y).get(loc.x);
+    }
+
+    public int getCost(Site site, int ownerID) {
+        if (site.owner == ownerID) {
+            return site.production > 4 ? 2 : 1;
+        } else {
+            return site.strength == 0 ? 1 : 10;
+        }
     }
 
     public void printMap() {
@@ -261,5 +276,44 @@ public class GameMap {
             }
             out.printf("\n");
         }
+    }
+
+    public ArrayList<Direction> moveToward(Location origin, Location destination) {
+        ArrayList<Direction> possibleDirections = new ArrayList<>(0);
+
+        int dx = origin.x - destination.x;
+        int dy = origin.y - destination.y;
+
+        double halfWidth = width / 2.0;
+        if (dx != 0) {
+            if ((Math.abs(dx) < halfWidth && dx < 0) || dx > halfWidth)
+                possibleDirections.add(Direction.EAST);
+            if (dx < halfWidth * -1.0 || Math.abs(dx) < halfWidth)
+                possibleDirections.add(Direction.WEST);
+        }
+
+
+        double halfHeight = height / 2.0;
+        if (dy != 0) {
+            if ((Math.abs(dy) < halfHeight && dy < 0) || dy > halfHeight)
+                possibleDirections.add(Direction.SOUTH);
+            if (dy < halfHeight * -1.0 || Math.abs(dy) < halfHeight)
+                possibleDirections.add(Direction.NORTH);
+        }
+
+        out.printf("moveToward %s to %s (%s)\n", origin, destination, possibleDirections);
+        return possibleDirections;
+    }
+
+    public Direction anyMoveToward(Location origin, Location destination) {
+        List<Direction> directions = moveToward(origin, destination).stream()
+                .sorted((o1, o2) -> {
+                    Location l1 = getLocation(origin, o1);
+                    Location l2 = getLocation(origin, o2);
+                    return Double.compare(getDistance(destination, l1), getDistance(destination, l2));
+                })
+                .collect(Collectors.toList());
+        if (directions.size() > 0) return directions.get(0);
+        else return Direction.STILL;
     }
 }

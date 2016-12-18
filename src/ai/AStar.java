@@ -11,13 +11,23 @@ import static util.Logger.out;
 public class AStar {
     private final GameMap gameMap;
     private final int myID;
+    private HashMap<Location, HashMap<Location, List<Location>>> pathCache;
 
     public AStar(GameMap gameMap, int myID) {
         this.gameMap = gameMap;
         this.myID = myID;
+        pathCache = new HashMap<>();
     }
 
     public List<Location> aStar(Location start, Location goal) {
+        HashMap<Location, List<Location>> startHash = pathCache.get(start);
+        if(startHash != null) {
+            if(startHash.get(goal) != null)
+                return startHash.get(goal);
+        } else {
+            pathCache.put(start, new HashMap<>());
+        }
+
         Site startSite = gameMap.getSite(start);
         final ArrayList<Location> pathList = new ArrayList<>();
 
@@ -62,6 +72,9 @@ public class AStar {
         }
         Collections.reverse(pathList);
         out.printf("\tPath for %s -> %s: %s\n", start, goal, pathList);
+
+        pathCache.get(start).put(goal, pathList);
+
         return pathList;
     }
 

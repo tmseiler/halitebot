@@ -9,7 +9,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class HaliteBot {
     private static final int WAIT_FACTOR = 5;
-    private static final int JUST_GET_IT = 0;
     private int myID;
     private GameMap gameMap;
     private long turnStartTime;
@@ -20,14 +19,13 @@ public class HaliteBot {
     ArrayList<Location> friendlyFrontiers;
     PriorityQueue<Location> nonFrontiers;
     DiffusionMap expansionMap;
-    private DiffusionMap aggressionMap;
 
     void run() {
         InitPackage iPackage = Networking.getInit();
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        Networking.sendInit("Dahlia mk13");
+        Networking.sendInit("Dahlia mk15");
 
 
         while (true) {
@@ -128,7 +126,7 @@ public class HaliteBot {
                 Location friendlyLoc = nonFrontiers.remove();
                 AStar astar = new AStar(simMap, myID);
                 Site site = simMap.getSite(friendlyLoc);
-                boolean shouldSkip = site.strength < site.production * WAIT_FACTOR;
+                if(site.strength < site.production * WAIT_FACTOR) continue;
 
                 out.printf("\n%s (%s strength, %s prod)\n", friendlyLoc, site.strength, site.production);
 
@@ -139,10 +137,18 @@ public class HaliteBot {
 
                 // move toward the nearest frontier if it's very close
                 target = getNearestFrontier(friendlyLoc);
-                if (target != null && astar.pathDistance(friendlyLoc, target) < Math.max(simMap.height, simMap.width) / 4.0)
-                    out.printf("\t[%s] There is a nearby frontier: %s\n", getTimeRemaining(), target);
-                else
-                    target = null;
+                out.printf("\t[%s] Nearest frontier is: %s\n", getTimeRemaining(), target);
+                if (target != null) {
+                    double distance;
+                    if(getTimeRemaining() > 100)
+                        distance = astar.pathDistance(friendlyLoc, target);
+                    else
+                        distance = simMap.getDistance(friendlyLoc, target);
+                    if(distance < Math.max(simMap.height, simMap.width) / 4.0)
+                        out.printf("\t[%s] Nearest frontier is close enough to act: %s\n", getTimeRemaining(), target);
+                    else
+                        target = null;
+                }
 
                 // move high-strength units to nearby frontiers
                 if (site.strength > 200) {
@@ -169,29 +175,8 @@ public class HaliteBot {
                     Location bestNearby = bfsBestFriendlyBoundary(friendlyLoc, 1);
 
                     out.printf("\t[%s] best nearby friendly is %s\n", getTimeRemaining(), bestNearby);
-                    Location easyTarget = bfsBest(friendlyLoc, 1.0, loc -> {
-                        Site s = simMap.getSite(loc);
-                        boolean adjacentEasy = s.owner == GameMap.NEUTRAL_OWNER && s.strength < JUST_GET_IT && s.production > 0;
-                        if (adjacentEasy) {
-                            return expansionMap.getValue(loc);
-                        } else {
-                            return -1.0;
-                        }
-                    });
 
-
-                    // if the best option of the area is adjacent:
-                    //   if you have the strength for it, grab it
-                    //   if you don't, wait
-                    //
-
-
-                    // TODO: it's capping a bad adjacent one instead of waiting for the best one
-                    if (easyTarget != null) {
-                        out.printf("\t[%s] Best easy target: %s\n", getTimeRemaining(), easyTarget);
-                        target = easyTarget;
-                        shouldSkip = false;
-                    } else if (bestAdjacent != null && bestNearby != null) {
+                    if (bestAdjacent != null && bestNearby != null) {
                         if (expansionMap.getValue(bestAdjacent) >= expansionMap.getValue(bestNearby) && shouldCapture(friendlyLoc, bestAdjacent)) {
                             target = bestAdjacent;
                             out.printf("\t[%s] Best expansion target is adjacent: %s\n", getTimeRemaining(), target);
@@ -216,7 +201,7 @@ public class HaliteBot {
                 }
 
                 // movement
-                if (target != null && !shouldSkip) {
+                if (target != null) {
                     Location nextStep = astar.aStarFirstStep(friendlyLoc, target);
                     out.printf("\t[%s] A* says next step is %s\n", getTimeRemaining(), nextStep);
                     Direction direction = simMap.anyMoveToward(friendlyLoc, nextStep);
@@ -403,20 +388,6 @@ public class HaliteBot {
 
     private long getTimeRemaining() {
         return turnStartTime + 1000 - System.currentTimeMillis();
-    }
-
-    private Location getBestNearbyFrontier(Location loc, double maxDistance) {
-        Location best = null;
-        double bestVal = 0.0;
-        for (Location frontier : friendlyFrontiers) {
-            if (gameMap.getDistance(loc, frontier) > maxDistance) continue;
-            double val = expansionMap.getValue(frontier);
-            if (val > bestVal) {
-                bestVal = val;
-                best = frontier;
-            }
-        }
-        return best;
     }
 
     private Location getNearestFrontier(Location loc) {

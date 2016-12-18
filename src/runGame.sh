@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#./halite -s 2278402832 -d "30 30" "java -cp ~/projects/halitebot/v12 MyBot" "java MyBot"
+./halite -s 2278402832 -d "30 30" "java -cp ~/projects/halitebot/v12 MyBot" "java MyBot"
 #./halite -s 948325491 -d "30 30" "java -cp ~/projects/halitebot/v12 MyBot" "java MyBot"
 #./halite -s 1033382847 -d "30 30" "java -cp ~/projects/halitebot/v12 MyBot" "java MyBot"
 #./halite -s 253191812 -d "30 30" "java -cp ~/projects/halitebot/v12 MyBot" "java MyBot"
@@ -15,4 +15,4 @@
 #./halite -s 1177300794 -d "25 25" "java -cp ~/projects/halitebot/v12 MyBot" "java MyBot" "java -cp ~/projects/halitebot/v12 MyBot" "java -cp ~/projects/halitebot/v12 MyBot"
 #./halite -s 3975766553 -d "40 40" "java -cp ~/projects/halitebot/v12 MyBot" "java MyBot" "java -cp ~/projects/halitebot/v12 MyBot" "java -cp ~/projects/halitebot/v12 MyBot"
 
-./halite -d "20 20" "java -cp ~/projects/halitebot/v12 MyBot" "java MyBot"
+#./halite -s 3599347198 -d "45 45" "java RandomBot" "java MyBot"

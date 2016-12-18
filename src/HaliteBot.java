@@ -25,7 +25,7 @@ public class HaliteBot {
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        Networking.sendInit("Dahlia mk15");
+        Networking.sendInit("Dahlia mk16");
 
 
         while (true) {
@@ -74,9 +74,10 @@ public class HaliteBot {
             }
 
             out.printf("[%s] preprocessed map\n", getTimeRemaining());
+            GameMap locMap = gameMap.copy();
             for (Location frontierLoc : friendlyFrontiers) {
                 int bestScore = 0;
-                GameMap locMap = gameMap.copy();
+                locMap = gameMap.copy();
                 locMap.simulateTurn(myID, moves);
                 Site site = locMap.getSite(frontierLoc);
                 if (site.strength < site.production * 10) {
@@ -120,15 +121,26 @@ public class HaliteBot {
 
             out.printf("Time left after diffusion: %s\n", getTimeRemaining());
 
-            while (!nonFrontiers.isEmpty()) {
-                GameMap simMap = gameMap.copy();
-                simMap.simulateTurn(myID, moves);
+            while (getTimeRemaining() > 75 && !nonFrontiers.isEmpty()) {
+                boolean makeGoodDecisions = getTimeRemaining() > 200;
                 Location friendlyLoc = nonFrontiers.remove();
+                if(!makeGoodDecisions && locMap.getSite(friendlyLoc).strength < locMap.getSite(friendlyLoc).production * WAIT_FACTOR) {
+                    continue;
+                }
+
+                GameMap simMap;
+                if(makeGoodDecisions)
+                    simMap = gameMap.copy();
+                else
+                    simMap = locMap;
+
+                simMap.simulateTurn(myID, moves);
                 AStar astar = new AStar(simMap, myID);
+
                 Site site = simMap.getSite(friendlyLoc);
-                if(site.strength < site.production * WAIT_FACTOR) continue;
 
                 out.printf("\n%s (%s strength, %s prod)\n", friendlyLoc, site.strength, site.production);
+                if(site.strength < site.production * WAIT_FACTOR) continue;
 
                 Move move;
 
@@ -140,10 +152,11 @@ public class HaliteBot {
                 out.printf("\t[%s] Nearest frontier is: %s\n", getTimeRemaining(), target);
                 if (target != null) {
                     double distance;
-                    if(getTimeRemaining() > 100)
+                    if(makeGoodDecisions)
                         distance = astar.pathDistance(friendlyLoc, target);
                     else
                         distance = simMap.getDistance(friendlyLoc, target);
+
                     if(distance < Math.max(simMap.height, simMap.width) / 4.0)
                         out.printf("\t[%s] Nearest frontier is close enough to act: %s\n", getTimeRemaining(), target);
                     else
@@ -255,6 +268,7 @@ public class HaliteBot {
 
                     move = new Move(friendlyLoc, direction, myID);
                     moves.add(move);
+                    out.printf("\t[%s] Added move %s\n", getTimeRemaining(), move);
                 }
             }
 

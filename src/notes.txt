@@ -1,1 +1,4 @@
-"action with options" - e.g., evaluate multiple moves
+way too aggressive on most maps -- in general strength spent in line waiting to attack is waste if there are good expansions
+survey nearby area when expanding -- be less picky if everything is very low strength or high prod?
+remove min strength check for expansion
+create mission enum and class, determineMission(Location) method

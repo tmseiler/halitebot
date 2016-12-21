@@ -25,7 +25,7 @@ public class HaliteBot {
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        Networking.sendInit("Dahlia mk16");
+        Networking.sendInit("Dahlia mk17");
 
 
         while (true) {
@@ -80,7 +80,7 @@ public class HaliteBot {
                 locMap = gameMap.copy();
                 locMap.simulateTurn(myID, moves);
                 Site site = locMap.getSite(frontierLoc);
-                if (site.strength < site.production * 10) {
+                if (site.strength < site.production * WAIT_FACTOR) {
                     nonFrontiers.add(frontierLoc);
                     continue;
                 }
@@ -124,12 +124,12 @@ public class HaliteBot {
             while (getTimeRemaining() > 75 && !nonFrontiers.isEmpty()) {
                 boolean makeGoodDecisions = getTimeRemaining() > 200;
                 Location friendlyLoc = nonFrontiers.remove();
-                if(!makeGoodDecisions && locMap.getSite(friendlyLoc).strength < locMap.getSite(friendlyLoc).production * WAIT_FACTOR) {
+                if (!makeGoodDecisions && locMap.getSite(friendlyLoc).strength < locMap.getSite(friendlyLoc).production * WAIT_FACTOR) {
                     continue;
                 }
 
                 GameMap simMap;
-                if(makeGoodDecisions)
+                if (makeGoodDecisions)
                     simMap = gameMap.copy();
                 else
                     simMap = locMap;
@@ -140,7 +140,7 @@ public class HaliteBot {
                 Site site = simMap.getSite(friendlyLoc);
 
                 out.printf("\n%s (%s strength, %s prod)\n", friendlyLoc, site.strength, site.production);
-                if(site.strength < site.production * WAIT_FACTOR) continue;
+                if (site.strength < site.production * WAIT_FACTOR) continue;
 
                 Move move;
 
@@ -152,12 +152,12 @@ public class HaliteBot {
                 out.printf("\t[%s] Nearest frontier is: %s\n", getTimeRemaining(), target);
                 if (target != null) {
                     double distance;
-                    if(makeGoodDecisions)
+                    if (makeGoodDecisions)
                         distance = astar.pathDistance(friendlyLoc, target);
                     else
                         distance = simMap.getDistance(friendlyLoc, target);
 
-                    if(distance < Math.max(simMap.height, simMap.width) / 4.0)
+                    if (distance < Math.max(simMap.height, simMap.width) / 6.0)
                         out.printf("\t[%s] Nearest frontier is close enough to act: %s\n", getTimeRemaining(), target);
                     else
                         target = null;
@@ -188,9 +188,11 @@ public class HaliteBot {
                     Location bestNearby = bfsBestFriendlyBoundary(friendlyLoc, 1);
 
                     out.printf("\t[%s] best nearby friendly is %s\n", getTimeRemaining(), bestNearby);
-
                     if (bestAdjacent != null && bestNearby != null) {
-                        if (expansionMap.getValue(bestAdjacent) >= expansionMap.getValue(bestNearby) && shouldCapture(friendlyLoc, bestAdjacent)) {
+                        boolean veryWeak = simMap.getSite(bestAdjacent).strength < WAIT_FACTOR * simMap.getSite(bestAdjacent).production;
+                        if (expansionMap.getValue(bestAdjacent) >= expansionMap.getValue(bestNearby)
+                                || veryWeak
+                                ) {
                             target = bestAdjacent;
                             out.printf("\t[%s] Best expansion target is adjacent: %s\n", getTimeRemaining(), target);
                         } else {
@@ -401,7 +403,7 @@ public class HaliteBot {
     }
 
     private long getTimeRemaining() {
-        return turnStartTime + 1000 - System.currentTimeMillis();
+        return 1000 - (System.currentTimeMillis() - turnStartTime);
     }
 
     private Location getNearestFrontier(Location loc) {
@@ -415,5 +417,10 @@ public class HaliteBot {
             }
         }
         return nearest;
+    }
+
+    private Mission determineMission(GameMap gameMap, Location location) {
+
+        return Mission.GESTATE;
     }
 }

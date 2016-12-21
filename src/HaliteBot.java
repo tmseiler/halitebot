@@ -25,15 +25,15 @@ public class HaliteBot {
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        Networking.sendInit("Dahlia mk17");
+        Networking.sendInit("Dahlia mk18");
 
 
         while (true) {
+            String frameString = Networking.getString();
             turnStartTime = System.currentTimeMillis();
             out.printf("\n\nNew turn\n");
             ArrayList<Move> moves = new ArrayList<>();
 
-            String frameString = Networking.getString();
             gameMap = Networking.deserializeGameMap(frameString);
             out.printf("[%s] created maps\n", getTimeRemaining());
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-./halite -s 2278402832 -d "30 30" "java -cp ~/projects/halitebot/v12 MyBot" "java MyBot"
+./halite -s 2278402832 -d "30 30" "java -cp ~/projects/halitebot/v19 MyBot" "java MyBot"
 #./halite -s 948325491 -d "30 30" "java -cp ~/projects/halitebot/v12 MyBot" "java MyBot"
 #./halite -s 1033382847 -d "30 30" "java -cp ~/projects/halitebot/v12 MyBot" "java MyBot"
 #./halite -s 253191812 -d "30 30" "java -cp ~/projects/halitebot/v12 MyBot" "java MyBot"

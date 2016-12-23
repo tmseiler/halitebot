@@ -19,13 +19,14 @@ public class HaliteBot {
     ArrayList<Location> friendlyFrontiers;
     PriorityQueue<Location> nonFrontiers;
     DiffusionMap expansionMap;
+    ArrayList<Location> combatParticipants;
 
     void run() {
         InitPackage iPackage = Networking.getInit();
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        Networking.sendInit("Dahlia mk18");
+        Networking.sendInit("Dahlia mk19");
 
 
         while (true) {
@@ -40,6 +41,7 @@ public class HaliteBot {
             friendlyLocations = new ArrayList<>(0);
             friendlyBoundaries = new ArrayList<>(0);
             friendlyFrontiers = new ArrayList<>(0);
+            combatParticipants = new ArrayList<>(0);
             nonFrontiers = new PriorityQueue<>((loc1, loc2) -> {
                 Site s1 = gameMap.getSite(loc1);
                 Site s2 = gameMap.getSite(loc2);
@@ -104,6 +106,7 @@ public class HaliteBot {
                 }
                 out.printf("[%s] Best move for %s is %s\n", getTimeRemaining(), frontierLoc, bestMove.dir);
                 moves.add(bestMove);
+                combatParticipants.add(frontierLoc);
             }
 
             expansionMap = new DiffusionMap(gameMap, gameMap -> {
@@ -135,6 +138,7 @@ public class HaliteBot {
                     simMap = locMap;
 
                 simMap.simulateTurn(myID, moves);
+
                 AStar astar = new AStar(simMap, myID);
 
                 Site site = simMap.getSite(friendlyLoc);
@@ -167,9 +171,11 @@ public class HaliteBot {
                 if (site.strength > 200) {
                     target = getNearestFrontier(friendlyLoc);
                     if (target != null) {
-//                        if(simMap.getDistance(friendlyLoc, target) < Math.max(gameMap.height, gameMap.width) / 8.0)
+                        if(simMap.getDistance(friendlyLoc, target) < Math.max(gameMap.height, gameMap.width) / 3.0)
                         out.printf("\t[%s] There is a nearby frontier, and I am strong: %s\n", getTimeRemaining(), target);
                     } else {
+                        // todo bfs enemy, A* to them, start digging
+
                         target = null;
                     }
                 }
@@ -222,6 +228,7 @@ public class HaliteBot {
                     Direction direction = simMap.anyMoveToward(friendlyLoc, nextStep);
 
                     Site nextStepSite = simMap.getSite(friendlyLoc, direction);
+                    if(combatParticipants.contains(nextStep)) continue;
 
                     if (isFriendly(nextStepSite)) {
                         int capWaste = (site.strength + nextStepSite.strength) - GameMap.MAX_STRENGTH;

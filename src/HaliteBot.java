@@ -27,7 +27,7 @@ public class HaliteBot {
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        Networking.sendInit("Dahlia mk21");
+        Networking.sendInit("Dahlia mk22");
 
 
         while (true) {
@@ -76,7 +76,7 @@ public class HaliteBot {
                 }
             }
 
-            if(friendlyFrontiers.size() > 0) contactMade = true;
+            if (friendlyFrontiers.size() > 0) contactMade = true;
             WAIT_FACTOR = contactMade ? 7 : 5;
 
             out.printf("[%s] preprocessed map\n", getTimeRemaining());
@@ -156,16 +156,17 @@ public class HaliteBot {
                 Location target = null;
 
                 // move toward the nearest frontier if it's very close
-                target = getNearestFrontier(friendlyLoc);
+                Location nearestFrontier = getNearestFrontier(friendlyLoc);
                 out.printf("\t[%s] Nearest frontier is: %s\n", getTimeRemaining(), target);
-                if (target != null) {
+                if (nearestFrontier != null) {
+                    target = nearestFrontier;
                     double distance;
                     if (makeGoodDecisions)
                         distance = astar.pathDistance(friendlyLoc, target);
                     else
                         distance = simMap.getDistance(friendlyLoc, target);
 
-                    if (distance < Math.max(simMap.height, simMap.width) / 5.0)
+                    if (distance < Math.max(simMap.height, simMap.width) / 4.0)
                         out.printf("\t[%s] Nearest frontier is close enough to act: %s\n", getTimeRemaining(), target);
                     else
                         target = null;
@@ -221,7 +222,17 @@ public class HaliteBot {
 
                 // no immediate expansion targets found, move toward something
                 if (target == null) {
-                    target = bfsBest(friendlyLoc, 1.0, loc -> expansionMap.getValue(loc));
+                    Location climbTarget = bfsBest(friendlyLoc, 1.0, loc -> expansionMap.getValue(loc));
+                    if (climbTarget != null) {
+                        target = climbTarget;
+                        out.printf("\t[%s] No good priorities, moving outward to climb target: %s\n", getTimeRemaining(), target);
+                    } else if (nearestFrontier != null) {
+                        target = nearestFrontier;
+                        out.printf("\t[%s] No good priorities, moving outward to frontier: %s\n", getTimeRemaining(), target);
+                    } else {
+                        target = getNearestBoundary(friendlyLoc);
+                        out.printf("\t[%s] No good priorities, moving outward to boundary: %s\n", getTimeRemaining(), target);
+                    }
                 }
 
                 // movement
@@ -231,7 +242,7 @@ public class HaliteBot {
                     Direction direction = simMap.anyMoveToward(friendlyLoc, nextStep);
 
                     Site nextStepSite = simMap.getSite(friendlyLoc, direction);
-                    if(combatParticipants.contains(nextStep)) continue;
+                    if (combatParticipants.contains(nextStep)) continue;
 
                     if (isFriendly(nextStepSite)) {
                         int capWaste = (site.strength + nextStepSite.strength) - GameMap.MAX_STRENGTH;
@@ -424,6 +435,19 @@ public class HaliteBot {
             if (distance < minDist) {
                 minDist = distance;
                 nearest = frontier;
+            }
+        }
+        return nearest;
+    }
+
+    private Location getNearestBoundary(Location loc) {
+        Location nearest = null;
+        double minDist = Double.MAX_VALUE;
+        for (Location boundary : friendlyBoundaries) {
+            double distance = gameMap.getDistance(loc, boundary);
+            if (distance < minDist) {
+                minDist = distance;
+                nearest = boundary;
             }
         }
         return nearest;

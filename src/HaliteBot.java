@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class HaliteBot {
-    private static final int WAIT_FACTOR = 5;
+    private static int WAIT_FACTOR = 5;
     private int myID;
     private GameMap gameMap;
     private long turnStartTime;
@@ -20,13 +20,14 @@ public class HaliteBot {
     PriorityQueue<Location> nonFrontiers;
     DiffusionMap expansionMap;
     ArrayList<Location> combatParticipants;
+    boolean contactMade = false;
 
     void run() {
         InitPackage iPackage = Networking.getInit();
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        Networking.sendInit("Dahlia mk20");
+        Networking.sendInit("Dahlia mk21");
 
 
         while (true) {
@@ -74,6 +75,9 @@ public class HaliteBot {
                     }
                 }
             }
+
+            if(friendlyFrontiers.size() > 0) contactMade = true;
+            WAIT_FACTOR = contactMade ? 7 : 5;
 
             out.printf("[%s] preprocessed map\n", getTimeRemaining());
             GameMap locMap = gameMap.copy();
@@ -124,10 +128,10 @@ public class HaliteBot {
 
             out.printf("Time left after diffusion: %s\n", getTimeRemaining());
 
-            while (getTimeRemaining() > 75 && !nonFrontiers.isEmpty()) {
-                boolean makeGoodDecisions = getTimeRemaining() > 200;
+            while (getTimeRemaining() > 50 && !nonFrontiers.isEmpty()) {
+                boolean makeGoodDecisions = getTimeRemaining() > 100;
                 Location friendlyLoc = nonFrontiers.remove();
-                if (!makeGoodDecisions && locMap.getSite(friendlyLoc).strength < locMap.getSite(friendlyLoc).production * WAIT_FACTOR) {
+                if (!makeGoodDecisions && locMap.getSite(friendlyLoc).strength < locMap.getSite(friendlyLoc).production * 5) {
                     continue;
                 }
 
@@ -161,7 +165,7 @@ public class HaliteBot {
                     else
                         distance = simMap.getDistance(friendlyLoc, target);
 
-                    if (distance < Math.max(simMap.height, simMap.width) / 6.0)
+                    if (distance < Math.max(simMap.height, simMap.width) / 5.0)
                         out.printf("\t[%s] Nearest frontier is close enough to act: %s\n", getTimeRemaining(), target);
                     else
                         target = null;

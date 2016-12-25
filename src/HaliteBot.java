@@ -27,7 +27,7 @@ public class HaliteBot {
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        Networking.sendInit("Dahlia mk22");
+        Networking.sendInit("Dahlia mk23");
 
 
         while (true) {
@@ -166,7 +166,7 @@ public class HaliteBot {
                     else
                         distance = simMap.getDistance(friendlyLoc, target);
 
-                    if (distance < Math.max(simMap.height, simMap.width) / 4.0)
+                    if (distance < Math.max(simMap.height, simMap.width) / 5.0)
                         out.printf("\t[%s] Nearest frontier is close enough to act: %s\n", getTimeRemaining(), target);
                     else
                         target = null;

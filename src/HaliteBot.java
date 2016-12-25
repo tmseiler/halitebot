@@ -27,7 +27,7 @@ public class HaliteBot {
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        Networking.sendInit("Dahlia mk24");
+        Networking.sendInit("Dahlia mk25");
 
 
         while (true) {
@@ -166,7 +166,7 @@ public class HaliteBot {
                     else
                         distance = simMap.getDistance(friendlyLoc, target);
 
-                    if (distance < Math.max(simMap.height, simMap.width) / 5.0)
+                    if (distance < Math.max(simMap.height, simMap.width) / 3.0)
                         out.printf("\t[%s] Nearest frontier is close enough to act: %s\n", getTimeRemaining(), target);
                     else
                         target = null;
@@ -178,8 +178,11 @@ public class HaliteBot {
                     if (target != null && simMap.getDistance(friendlyLoc, target) < Math.max(gameMap.height, gameMap.width) / 3.0) {
                         out.printf("\t[%s] There is a nearby frontier, and I am strong: %s\n", getTimeRemaining(), target);
                     } else {
-                        // todo bfs enemy, A* to them, start digging
-
+//                        target = bfsFirst(friendlyLoc, 5.0, loc -> {
+//                            Site s = simMap.getSite(loc);
+//                            if (s.owner != GameMap.NEUTRAL_OWNER && s.owner != myID) return 1.0;
+//                            else return 0.0;
+//                        });
                         target = null;
                     }
                 }
@@ -251,7 +254,7 @@ public class HaliteBot {
                         if (capWaste > 20) {
                             if (nonFrontiers.contains(nextStep)
                                     && nextStepSite.strength < site.strength
-                                    && nextStepSite.strength < 175) {
+                                    && nextStepSite.strength < 200) {
                                 out.printf("\t[%s] Swapping with %s\n", getTimeRemaining(), nextStep);
                                 Move nextStepMove = new Move(nextStep, simMap.anyMoveToward(nextStep, friendlyLoc), myID);
                                 nonFrontiers.remove(nextStep);

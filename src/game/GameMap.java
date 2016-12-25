@@ -261,14 +261,13 @@ public class GameMap {
     }
 
     public int getCost(Site site, int ownerID) {
-        if (site.owner == ownerID) {
-            if(site.strength > 200) {
-                return 15;
-            } else {
-                return site.production > 4 ? 2 : 1;
-            }
+        if (site.strength > 200) {
+            return 15;
+        } else if (site.owner == ownerID) {
+            return site.production > 4 ? 2 : 1;
         } else {
-            return site.strength == 0 ? 1 : 10;
+            if (site.strength > 0) return 10;
+            else return 1;
         }
     }
 

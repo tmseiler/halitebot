@@ -27,7 +27,7 @@ public class HaliteBot {
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        Networking.sendInit("Dahlia mk23");
+        Networking.sendInit("Dahlia mk24");
 
 
         while (true) {
@@ -173,7 +173,7 @@ public class HaliteBot {
                 }
 
                 // move high-strength units to nearby frontiers
-                if (site.strength > 200) {
+                if (site.strength > 175) {
                     target = getNearestFrontier(friendlyLoc);
                     if (target != null && simMap.getDistance(friendlyLoc, target) < Math.max(gameMap.height, gameMap.width) / 3.0) {
                         out.printf("\t[%s] There is a nearby frontier, and I am strong: %s\n", getTimeRemaining(), target);
@@ -251,7 +251,7 @@ public class HaliteBot {
                         if (capWaste > 20) {
                             if (nonFrontiers.contains(nextStep)
                                     && nextStepSite.strength < site.strength
-                                    && nextStepSite.strength < 200) {
+                                    && nextStepSite.strength < 175) {
                                 out.printf("\t[%s] Swapping with %s\n", getTimeRemaining(), nextStep);
                                 Move nextStepMove = new Move(nextStep, simMap.anyMoveToward(nextStep, friendlyLoc), myID);
                                 nonFrontiers.remove(nextStep);

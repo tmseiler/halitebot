@@ -27,7 +27,7 @@ public class HaliteBot {
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        Networking.sendInit("Dahlia mk25");
+        Networking.sendInit("Dahlia mk26");
 
 
         while (true) {
@@ -166,23 +166,18 @@ public class HaliteBot {
                     else
                         distance = simMap.getDistance(friendlyLoc, target);
 
-                    if (distance < Math.max(simMap.height, simMap.width) / 3.0)
+                    if (distance < Math.max(simMap.height, simMap.width) / 4.0)
                         out.printf("\t[%s] Nearest frontier is close enough to act: %s\n", getTimeRemaining(), target);
                     else
                         target = null;
                 }
 
                 // move high-strength units to nearby frontiers
-                if (site.strength > 175) {
+                if (site.strength > 200) {
                     target = getNearestFrontier(friendlyLoc);
                     if (target != null && simMap.getDistance(friendlyLoc, target) < Math.max(gameMap.height, gameMap.width) / 3.0) {
                         out.printf("\t[%s] There is a nearby frontier, and I am strong: %s\n", getTimeRemaining(), target);
                     } else {
-//                        target = bfsFirst(friendlyLoc, 5.0, loc -> {
-//                            Site s = simMap.getSite(loc);
-//                            if (s.owner != GameMap.NEUTRAL_OWNER && s.owner != myID) return 1.0;
-//                            else return 0.0;
-//                        });
                         target = null;
                     }
                 }
@@ -202,7 +197,7 @@ public class HaliteBot {
 
                     out.printf("\t[%s] best nearby friendly is %s\n", getTimeRemaining(), bestNearby);
                     if (bestAdjacent != null && bestNearby != null) {
-                        boolean veryWeak = simMap.getSite(bestAdjacent).strength < WAIT_FACTOR * simMap.getSite(bestAdjacent).production;
+                        boolean veryWeak = simMap.getSite(bestAdjacent).strength < (WAIT_FACTOR + 1) * simMap.getSite(bestAdjacent).production;
                         if (expansionMap.getValue(bestAdjacent) >= expansionMap.getValue(bestNearby)
                                 || veryWeak
                                 ) {

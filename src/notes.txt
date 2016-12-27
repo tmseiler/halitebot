@@ -1,7 +1,2 @@
-way too aggressive on most maps -- in general strength spent in line waiting to attack is waste if there are good expansions
-survey nearby area when expanding -- be less picky if everything is very low strength or high prod?
-remove min strength check for expansion
-create mission enum and class, determineMission(Location) method
-poor scaling with number of 200+ units because they unconditionally A* to a frontier
-	have them bfs enemy?
-move things to nearest boundary more often
+try out flat strength value for waiting
+strongly negatively score combat moves that put piece next to another friendly

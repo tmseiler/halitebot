@@ -10,7 +10,6 @@ public class Site {
     public double clusterAcquisitionScore;
 
     public double individualAcquisitionScore() {
-//        return (double) production * (double) production / Math.pow(strength + 1.0, 1.8);
         return Math.pow(production, 2.2) / Math.pow(strength + 1.0, 1.8);
     }
 }

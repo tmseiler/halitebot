@@ -217,12 +217,14 @@ public class GameMap {
                         score -= piece.damageTaken;
                     }
                     Site site = getSite(loc);
+
                     if (piece.strength > 0) {
                         site.strength = piece.strength;
                         site.owner = piece.owner;
                         if (site.owner == myID) score += 5 * site.production;
                         break;
                     }
+
                     if (piece.damageTaken > 0) {
                         if (site.owner != myID) score += 3 * site.production;
                         site.owner = NEUTRAL_OWNER;

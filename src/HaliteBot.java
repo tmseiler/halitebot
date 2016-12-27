@@ -1,5 +1,6 @@
 import ai.AStar;
 import ai.BFSScorer;
+import ai.Mission;
 import game.*;
 
 import static util.Logger.out;
@@ -27,7 +28,7 @@ public class HaliteBot {
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        Networking.sendInit("Dahlia mk26");
+        Networking.sendInit("Dahlia mk27");
 
 
         while (true) {
@@ -90,6 +91,7 @@ public class HaliteBot {
                     nonFrontiers.add(frontierLoc);
                     continue;
                 }
+
                 Move bestMove = new Move(frontierLoc, Direction.STILL, myID);
                 for (Direction d : Direction.DIRECTIONS) {
                     Site moveSite = locMap.getSite(frontierLoc, d);
@@ -150,6 +152,7 @@ public class HaliteBot {
                 out.printf("\n%s (%s strength, %s prod)\n", friendlyLoc, site.strength, site.production);
                 if (site.strength < site.production * WAIT_FACTOR) continue;
 
+                Mission mission = null;
                 Move move;
 
                 // goal selection
@@ -168,8 +171,12 @@ public class HaliteBot {
 
                     if (distance < Math.max(simMap.height, simMap.width) / 4.0)
                         out.printf("\t[%s] Nearest frontier is close enough to act: %s\n", getTimeRemaining(), target);
-                    else
+                    else {
                         target = null;
+                        mission = null;
+                    }
+
+                    if (target != null) mission = new Mission(friendlyLoc, target, loc -> simMap.getSite(loc).strength > WAIT_FACTOR * simMap.getSite(loc).production);
                 }
 
                 // move high-strength units to nearby frontiers
@@ -179,11 +186,13 @@ public class HaliteBot {
                         out.printf("\t[%s] There is a nearby frontier, and I am strong: %s\n", getTimeRemaining(), target);
                     } else {
                         target = null;
+                        mission = null;
                     }
+                    if (target != null) mission = new Mission(friendlyLoc, target, loc -> simMap.getSite(loc).strength > WAIT_FACTOR * simMap.getSite(loc).production);
                 }
 
                 // Expanding
-                if (target == null) {
+                if (mission == null) {
                     Location bestAdjacent = bfsBest(friendlyLoc, 1.0, loc -> {
                         Site s = simMap.getSite(loc);
                         if (s.owner == GameMap.NEUTRAL_OWNER)
@@ -202,40 +211,48 @@ public class HaliteBot {
                                 || veryWeak
                                 ) {
                             target = bestAdjacent;
+                            mission = new Mission(friendlyLoc, bestAdjacent, loc -> true);
                             out.printf("\t[%s] Best expansion target is adjacent: %s\n", getTimeRemaining(), target);
                         } else {
                             target = bestNearby;
                             out.printf("\t[%s] Best expansion target is nearby: %s\n", getTimeRemaining(), target);
+                            mission = new Mission(friendlyLoc, target, loc -> simMap.getSite(loc).strength > WAIT_FACTOR * simMap.getSite(loc).production);
                         }
                     } else if (bestAdjacent != null) {
                         target = bestAdjacent;
+                        mission = new Mission(friendlyLoc, bestAdjacent, loc -> true);
                         out.printf("\t[%s] Best expansion target is adjacent: %s\n", getTimeRemaining(), target);
                     } else if (bestNearby != null) {
                         target = bestNearby;
                         out.printf("\t[%s] Best expansion target is nearby: %s\n", getTimeRemaining(), target);
+                        mission = new Mission(friendlyLoc, target, loc -> simMap.getSite(loc).strength > WAIT_FACTOR * simMap.getSite(loc).production);
                     } else {
                         out.printf("\t[%s] No expansion targets nearby.\n", getTimeRemaining());
+                        mission = null;
                     }
                 }
 
                 // no immediate expansion targets found, move toward something
-                if (target == null) {
+                if (mission == null) {
                     Location climbTarget = bfsBest(friendlyLoc, 1.0, loc -> expansionMap.getValue(loc));
                     if (climbTarget != null) {
                         target = climbTarget;
+                        mission = new Mission(friendlyLoc, target, loc -> simMap.getSite(loc).strength > WAIT_FACTOR * simMap.getSite(loc).production);
                         out.printf("\t[%s] No good priorities, moving outward to climb target: %s\n", getTimeRemaining(), target);
                     } else if (nearestFrontier != null) {
                         target = nearestFrontier;
+                        mission = new Mission(friendlyLoc, target, loc -> simMap.getSite(loc).strength > WAIT_FACTOR * simMap.getSite(loc).production);
                         out.printf("\t[%s] No good priorities, moving outward to frontier: %s\n", getTimeRemaining(), target);
                     } else {
                         target = getNearestBoundary(friendlyLoc);
+                        mission = new Mission(friendlyLoc, target, loc -> simMap.getSite(loc).strength > WAIT_FACTOR * simMap.getSite(loc).production);
                         out.printf("\t[%s] No good priorities, moving outward to boundary: %s\n", getTimeRemaining(), target);
                     }
                 }
 
                 // movement
-                if (target != null) {
-                    Location nextStep = astar.aStarFirstStep(friendlyLoc, target);
+                if (mission.shouldMove()) {
+                    Location nextStep = astar.aStarFirstStep(friendlyLoc, mission.target);
                     out.printf("\t[%s] A* says next step is %s\n", getTimeRemaining(), nextStep);
                     Direction direction = simMap.anyMoveToward(friendlyLoc, nextStep);
 
@@ -284,6 +301,7 @@ public class HaliteBot {
                         }
                     } else {
                         if (!shouldCapture(friendlyLoc, nextStep))
+                            // todo gather?
                             direction = Direction.STILL;
                     }
 
@@ -449,10 +467,5 @@ public class HaliteBot {
             }
         }
         return nearest;
-    }
-
-    private Mission determineMission(GameMap gameMap, Location location) {
-
-        return Mission.GESTATE;
     }
 }

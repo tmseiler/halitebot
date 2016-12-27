@@ -213,9 +213,9 @@ public class GameMap {
                 Location loc = new Location(x, y);
                 for (Piece piece : getMovedPieces(loc).values()) {
                     piece.strength -= piece.damageTaken;
-                    if (piece.owner == myID) {
-                        score -= piece.damageTaken;
-                    }
+//                    if (piece.owner == myID) {
+//                        score -= piece.damageTaken;
+//                    }
                     Site site = getSite(loc);
 
                     if (piece.strength > 0) {

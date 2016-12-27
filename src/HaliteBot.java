@@ -18,6 +18,7 @@ public class HaliteBot {
     ArrayList<Location> expansionTargets;
     ArrayList<Location> friendlyBoundaries;
     ArrayList<Location> friendlyFrontiers;
+    ArrayList<Location> enemyFrontiers;
     PriorityQueue<Location> nonFrontiers;
     DiffusionMap expansionMap;
     ArrayList<Location> combatParticipants;
@@ -35,7 +36,7 @@ public class HaliteBot {
             String frameString = Networking.getString();
             turnStartTime = System.currentTimeMillis();
             out.printf("\n\nNew turn\n");
-            ArrayList<Move> moves = new ArrayList<>();
+            ArrayList<Move> myMoves = new ArrayList<>();
 
             gameMap = Networking.deserializeGameMap(frameString);
             out.printf("[%s] created maps\n", getTimeRemaining());
@@ -43,6 +44,7 @@ public class HaliteBot {
             friendlyLocations = new ArrayList<>(0);
             friendlyBoundaries = new ArrayList<>(0);
             friendlyFrontiers = new ArrayList<>(0);
+            enemyFrontiers = new ArrayList<>(0);
             combatParticipants = new ArrayList<>(0);
             nonFrontiers = new PriorityQueue<>((loc1, loc2) -> {
                 Site s1 = gameMap.getSite(loc1);
@@ -73,6 +75,9 @@ public class HaliteBot {
                             }
                             friendlyBoundaries.add(location);
                         }
+                    } else {
+                        if(isFrontier(location) && gameMap.getSite(location).owner != GameMap.NEUTRAL_OWNER)
+                            enemyFrontiers.add(location);
                     }
                 }
             }
@@ -81,12 +86,44 @@ public class HaliteBot {
             WAIT_FACTOR = contactMade ? 7 : 5;
 
             out.printf("[%s] preprocessed map\n", getTimeRemaining());
+
+            ArrayList<Move> enemyMoves = new ArrayList<>(0);
+            for (Location enemyFrontier : enemyFrontiers) {
+                Site frontierSite = gameMap.getSite(enemyFrontier);
+                int bestCount = 0;
+                Direction bestDirection = Direction.STILL;
+
+                for (Direction d : Direction.CARDINALS) {
+                    int count = 0;
+                    Location targetLoc = gameMap.getLocation(enemyFrontier, d);
+
+                    if (!isFrontier(targetLoc)) continue;
+                    count++;
+
+                    for (Location targetNeighbor : gameMap.getNeighbors(targetLoc)) {
+                        Site neighborSite = gameMap.getSite(targetNeighbor);
+                        if(neighborSite.owner != frontierSite.owner && neighborSite.owner != GameMap.NEUTRAL_OWNER) count++;
+                    }
+
+                    if(count > bestCount) {
+                        bestCount = count;
+                        bestDirection = d;
+                    }
+                }
+                enemyMoves.add(new Move(enemyFrontier, bestDirection, frontierSite.owner));
+            }
+            out.printf("[%s] Assumed enemy moves: %s\n", getTimeRemaining(), enemyMoves);
+
             GameMap locMap = gameMap.copy();
             for (Location frontierLoc : friendlyFrontiers) {
                 int bestScore = 0;
+                ArrayList<Move> allMoves = new ArrayList<>();
+                allMoves.addAll(enemyMoves);
+                allMoves.addAll(myMoves);
                 locMap = gameMap.copy();
-                locMap.simulateTurn(myID, moves);
-                Site site = locMap.getSite(frontierLoc);
+
+                locMap.simulateTurn(myID, allMoves);
+                Site site = gameMap.getSite(frontierLoc);
                 if (site.strength < site.production * WAIT_FACTOR) {
                     nonFrontiers.add(frontierLoc);
                     continue;
@@ -110,8 +147,8 @@ public class HaliteBot {
                         out.printf("[%s]\tBest move for %s is now %s: score %s\n", getTimeRemaining(), frontierLoc, frontierMove.dir, score);
                     }
                 }
-                out.printf("[%s] Best move for %s is %s\n", getTimeRemaining(), frontierLoc, bestMove.dir);
-                moves.add(bestMove);
+                out.printf("[%s] Best move for %s (%s strength, %s prod) is %s\n", getTimeRemaining(), frontierLoc, site.strength, site.production, bestMove.dir);
+                myMoves.add(bestMove);
                 combatParticipants.add(frontierLoc);
             }
 
@@ -143,14 +180,21 @@ public class HaliteBot {
                 else
                     simMap = locMap;
 
-                simMap.simulateTurn(myID, moves);
+                ArrayList<Move> allMoves = new ArrayList<>();
+                allMoves.addAll(enemyMoves);
+                allMoves.addAll(myMoves);
+
+                simMap.simulateTurn(myID, allMoves);
 
                 AStar astar = new AStar(simMap, myID);
 
                 Site site = simMap.getSite(friendlyLoc);
-
-                out.printf("\n%s (%s strength, %s prod)\n", friendlyLoc, site.strength, site.production);
-                if (site.strength < site.production * WAIT_FACTOR) continue;
+                Site currentSite = gameMap.getSite(friendlyLoc);
+                out.printf("\n%s (%s strength, %s prod)\n", friendlyLoc, currentSite.strength, currentSite.production);
+                if (site.strength < site.production * WAIT_FACTOR) {
+                    out.printf("\tShould not move -- skipping\n");
+                    continue;
+                }
 
                 Mission mission = null;
                 Move move;
@@ -270,7 +314,7 @@ public class HaliteBot {
                                 out.printf("\t[%s] Swapping with %s\n", getTimeRemaining(), nextStep);
                                 Move nextStepMove = new Move(nextStep, simMap.anyMoveToward(nextStep, friendlyLoc), myID);
                                 nonFrontiers.remove(nextStep);
-                                moves.add(nextStepMove);
+                                myMoves.add(nextStepMove);
                             } else {
                                 direction = Direction.STILL;
                             }
@@ -281,7 +325,7 @@ public class HaliteBot {
                                 out.printf("\t[%s] Telling %s to stay put\n", getTimeRemaining(), nextStep);
                                 Move nextStepMove = new Move(nextStep, Direction.STILL, myID);
                                 nonFrontiers.remove(nextStep);
-                                moves.add(nextStepMove);
+                                myMoves.add(nextStepMove);
                                 gatherStrength += nextStepSite.strength;
                             }
                             // gather
@@ -291,7 +335,7 @@ public class HaliteBot {
                                     if (nextNeighborSite.strength > nextNeighborSite.production * WAIT_FACTOR) {
                                         if (nextNeighborSite.strength + gatherStrength < GameMap.MAX_STRENGTH) {
                                             Move gatherMove = new Move(nextNeighbor, simMap.anyMoveToward(nextNeighbor, nextStep), myID);
-                                            moves.add(gatherMove);
+                                            myMoves.add(gatherMove);
                                             nonFrontiers.remove(nextNeighbor);
                                         }
                                     }
@@ -306,15 +350,15 @@ public class HaliteBot {
                     }
 
                     move = new Move(friendlyLoc, direction, myID);
-                    moves.add(move);
+                    myMoves.add(move);
                     out.printf("\t[%s] Added move %s\n", getTimeRemaining(), move);
                 }
             }
 
             out.printf("Time left after assigning all moves: %s\n", getTimeRemaining());
 
-            out.printf("Moves: %s\n", moves);
-            Networking.sendFrame(moves);
+            out.printf("Moves: %s\n", myMoves);
+            Networking.sendFrame(myMoves);
         }
 
     }

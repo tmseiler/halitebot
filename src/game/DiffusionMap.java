@@ -11,7 +11,7 @@ public class DiffusionMap {
         this.gameMap = gameMap;
         this.friendlyOnly = friendlyOnly;
         this.map = seeder.seedMap(gameMap);
-        int diffusionCount = Math.max(gameMap.width, gameMap.height) / 4;
+        int diffusionCount = Math.max(gameMap.width, gameMap.height) / 2;
         for (int i = 0; i < diffusionCount; i++) {
             diffuse();
         }

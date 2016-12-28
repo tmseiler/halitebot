@@ -1,2 +1,3 @@
 try out flat strength value for waiting
 strongly negatively score combat moves that put piece next to another friendly
+only send high strength units to attack (but make them more readily?)

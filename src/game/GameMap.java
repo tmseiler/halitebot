@@ -139,8 +139,6 @@ public class GameMap {
 
     public int simulateTurn(int myID, ArrayList<Move> moves) {
         int score = 0;
-        int myCount = 0;
-        int enemyCount = 0;
         movedPieces = new ArrayList<>();
         unmovedPieces = new ArrayList<>();
         // represent board as pieces
@@ -150,8 +148,6 @@ public class GameMap {
             for (int x = 0; x < width; x++) {
                 unresolvedRow.add(new HashMap<>());
                 Site s = getSite(new Location(x, y));
-                if (s.owner == myID) myCount += s.strength;
-                if (s.owner != myID && s.owner != NEUTRAL_OWNER) enemyCount += s.strength;
                 resolvedRow.add(new Piece(s.owner, s.strength));
             }
             movedPieces.add(unresolvedRow);
@@ -214,10 +210,11 @@ public class GameMap {
                 for (Piece piece : getMovedPieces(loc).values()) {
                     piece.strength -= piece.damageTaken;
 //                    if (piece.owner == myID) {
-//                        score -= piece.damageTaken;
+//                        score -= Math.min(piece.damageTaken, MAX_STRENGTH);
 //                    }
                     Site site = getSite(loc);
 
+                    // some piece lived
                     if (piece.strength > 0) {
                         site.strength = piece.strength;
                         site.owner = piece.owner;
@@ -225,6 +222,7 @@ public class GameMap {
                         break;
                     }
 
+                    // all pieces died
                     if (piece.damageTaken > 0) {
                         if (site.owner != myID) score += 3 * site.production;
                         site.owner = NEUTRAL_OWNER;
@@ -263,12 +261,15 @@ public class GameMap {
     }
 
     public int getCost(Site site, int ownerID) {
-        if (site.strength > 200) {
-            return 15;
-        } else if (site.owner == ownerID) {
+        if (site.owner == ownerID) {
+            if (site.strength > 200) {
+                return 5;
+            }
             return site.production > 4 ? 2 : 1;
         } else {
-            if (site.strength > 0) return 10;
+            if (site.strength > 200) {
+                return 15;
+            } else if (site.strength > 0) return 5;
             else return 1;
         }
     }

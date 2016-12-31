@@ -1,3 +1,4 @@
-try out flat strength value for waiting
-strongly negatively score combat moves that put piece next to another friendly
-only send high strength units to attack (but make them more readily?)
+update interior logic:
+	1. check for nearby expansion targets (4ish? radius)
+	2. check for frontier
+	3. just climb

@@ -268,7 +268,7 @@ public class GameMap {
             return site.production > 4 ? 2 : 1;
         } else {
             if (site.strength > 200) {
-                return 15;
+                return 7;
             } else if (site.strength > 0) return 5;
             else return 1;
         }

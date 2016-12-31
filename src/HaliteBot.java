@@ -29,7 +29,7 @@ public class HaliteBot {
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        Networking.sendInit("Dahlia mk29");
+        Networking.sendInit("Dahlia mk30");
 
 
         while (true) {
@@ -223,10 +223,6 @@ public class HaliteBot {
                 Site site = simMap.getSite(friendlyLoc);
                 Site currentSite = gameMap.getSite(friendlyLoc);
                 out.printf("\n%s (%s strength, %s prod)\n", friendlyLoc, currentSite.strength, currentSite.production);
-                if (site.strength < site.production * WAIT_FACTOR) {
-                    out.printf("\tShould not move -- skipping\n");
-                    continue;
-                }
 
                 Mission mission = null;
                 Move move;

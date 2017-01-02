@@ -29,17 +29,17 @@ public class HaliteBot {
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        Networking.sendInit("Dahlia mk30");
+        Networking.sendInit("Dahlia mk31");
 
 
         while (true) {
             String frameString = Networking.getString();
             turnStartTime = System.currentTimeMillis();
-            out.printf("\n\nNew turn\n");
+            log("\n\nNew turn");
             ArrayList<Move> myMoves = new ArrayList<>();
 
             gameMap = Networking.deserializeGameMap(frameString);
-            out.printf("[%s] created maps\n", getTimeRemaining());
+            log("created maps");
 
             friendlyLocations = new ArrayList<>(0);
             friendlyBoundaries = new ArrayList<>(0);
@@ -93,7 +93,7 @@ public class HaliteBot {
             if (friendlyFrontiers.size() > 0) contactMade = true;
             WAIT_FACTOR = contactMade ? 7 : 5;
 
-            out.printf("[%s] preprocessed map\n", getTimeRemaining());
+            log("preprocessed map");
 
             ArrayList<Move> enemyMoves = new ArrayList<>(0);
             for (Location enemyCombatant : enemyCombatants) {
@@ -105,12 +105,12 @@ public class HaliteBot {
                         return s.owner == GameMap.NEUTRAL_OWNER && s.strength == 0 ? 1.0 : 0.0;
                     });
 
-                    out.printf("[%s] Nearest frontier to enemy %s is %s\n", getTimeRemaining(), enemyCombatant, nearestFrontier);
+                    log("Nearest frontier to enemy %s is %s", enemyCombatant, nearestFrontier);
 
                     Move move = new Move(enemyCombatant,
                             gameMap.anyMoveToward(enemyCombatant, nearestFrontier),
                             combatantSite.owner);
-//                    out.printf("[%s] Adding enemy move %s (non-frontier)\n", getTimeRemaining(), move);
+//                    log("Adding enemy move %s (non-frontier)", move);
                     enemyMoves.add(move);
                     continue;
                 }
@@ -136,11 +136,11 @@ public class HaliteBot {
                     }
                 }
                 Move move = new Move(enemyCombatant, bestDirection, combatantSite.owner);
-//                out.printf("[%s] Adding enemy move %s (frontier)\n", getTimeRemaining(), move);
+//                log("Adding enemy move %s (frontier)", move);
 
                 enemyMoves.add(move);
             }
-            out.printf("[%s] Assumed enemy moves: %s\n", getTimeRemaining(), enemyMoves);
+            log("Assumed enemy moves: %s", enemyMoves);
 
             GameMap locMap = gameMap.copy();
             for (Location frontierLoc : friendlyFrontiers) {
@@ -169,17 +169,17 @@ public class HaliteBot {
                     Move frontierMove = new Move(frontierLoc, d, myID);
                     frontierMoves.add(frontierMove);
                     int score = simMap.simulateTurn(myID, frontierMoves);
-                    out.printf("[%s]\tSimulated turn %s -> %s: score %s\n", getTimeRemaining(), frontierLoc, frontierMove.dir, score);
+                    log("\tSimulated turn %s -> %s: score %s", frontierLoc, frontierMove.dir, score);
 
 
                     if (score > bestScore) {
                         bestScore = score;
                         bestMove = frontierMove;
-                        out.printf("[%s]\tBest move for %s is now %s: score %s\n", getTimeRemaining(), frontierLoc, frontierMove.dir, score);
+                        log("\tBest move for %s is now %s: score %s", frontierLoc, frontierMove.dir, score);
                     }
                 }
 
-                out.printf("[%s] Best move for %s (%s strength, %s prod) is %s\n", getTimeRemaining(), frontierLoc, site.strength, site.production, bestMove.dir);
+                log("Best move for %s (%s strength, %s prod) is %s", frontierLoc, site.strength, site.production, bestMove.dir);
                 myMoves.add(bestMove);
                 combatParticipants.add(frontierLoc);
             }
@@ -197,7 +197,7 @@ public class HaliteBot {
                 return newMap;
             });
 
-            out.printf("Time left after diffusion: %s\n", getTimeRemaining());
+            log("Executed diffusion");
 
             while (getTimeRemaining() > 50 && !nonFrontiers.isEmpty()) {
                 boolean makeGoodDecisions = getTimeRemaining() > 100;
@@ -222,7 +222,7 @@ public class HaliteBot {
 
                 Site site = simMap.getSite(friendlyLoc);
                 Site currentSite = gameMap.getSite(friendlyLoc);
-                out.printf("\n%s (%s strength, %s prod)\n", friendlyLoc, currentSite.strength, currentSite.production);
+                log("\n%s (%s strength, %s prod)", friendlyLoc, currentSite.strength, currentSite.production);
 
                 Mission mission = null;
                 Move move;
@@ -232,7 +232,7 @@ public class HaliteBot {
 
                 // move toward the nearest frontier if it's very close
                 Location nearestFrontier = getNearestFrontier(friendlyLoc);
-                out.printf("\t[%s] Nearest frontier is: %s\n", getTimeRemaining(), target);
+                log("\tNearest frontier is: %s", target);
                 if (nearestFrontier != null) {
                     target = nearestFrontier;
                     double distance;
@@ -242,7 +242,7 @@ public class HaliteBot {
                         distance = simMap.getDistance(friendlyLoc, target);
 
                     if (distance < 7.0)
-                        out.printf("\t[%s] Nearest frontier is close enough to act: %s\n", getTimeRemaining(), target);
+                        log("\tNearest frontier is close enough to act: %s", target);
                     else {
                         target = null;
                         mission = null;
@@ -255,66 +255,75 @@ public class HaliteBot {
                 // Expanding
                 if (mission == null) {
                     Location bestAdjacent = bfsBest(friendlyLoc, 1.0, loc -> {
-                        Site s = simMap.getSite(loc);
+                        Site s = gameMap.getSite(loc);
                         if (s.owner == GameMap.NEUTRAL_OWNER)
                             return expansionMap.getValue(loc);
                         else
                             return 0.0;
                     });
-                    out.printf("\t[%s] bestAdjacent is %s\n", getTimeRemaining(), bestAdjacent);
+                    log("\tbestAdjacent is %s", bestAdjacent);
 
                     Location bestNearby = bfsBestFriendlyBoundary(friendlyLoc, 1);
 
-                    out.printf("\t[%s] best nearby friendly is %s\n", getTimeRemaining(), bestNearby);
+                    log("\tbest nearby friendly is %s", bestNearby);
                     if (bestAdjacent != null && bestNearby != null) {
                         boolean veryWeak = simMap.getSite(bestAdjacent).strength < (WAIT_FACTOR + 1) * simMap.getSite(bestAdjacent).production;
                         if (expansionMap.getValue(bestAdjacent) >= expansionMap.getValue(bestNearby)
                                 || veryWeak
                                 ) {
                             target = bestAdjacent;
-                            out.printf("\t[%s] Best expansion target is adjacent: %s\n", getTimeRemaining(), target);
+                            log("\tBest expansion target is adjacent: %s", target);
                             mission = new Mission(friendlyLoc, bestAdjacent, loc -> true);
                         } else {
                             target = bestNearby;
-                            out.printf("\t[%s] Best expansion target is nearby: %s\n", getTimeRemaining(), target);
+                            log("\tBest expansion target is nearby: %s", target);
                             mission = new Mission(friendlyLoc, target, loc -> simMap.getSite(loc).strength > WAIT_FACTOR * simMap.getSite(loc).production);
                         }
                     } else if (bestAdjacent != null) {
                         target = bestAdjacent;
-                        out.printf("\t[%s] Best expansion target is adjacent: %s\n", getTimeRemaining(), target);
+                        log("\tBest expansion target is adjacent: %s", target);
                         mission = new Mission(friendlyLoc, bestAdjacent, loc -> true);
                     } else if (bestNearby != null) {
                         target = bestNearby;
-                        out.printf("\t[%s] Best expansion target is nearby: %s\n", getTimeRemaining(), target);
+                        log("\tBest expansion target is nearby: %s", target);
                         mission = new Mission(friendlyLoc, target, loc -> simMap.getSite(loc).strength > WAIT_FACTOR * simMap.getSite(loc).production);
                     } else {
-                        out.printf("\t[%s] No expansion targets nearby.\n", getTimeRemaining());
+                        log("\tNo expansion targets nearby.");
                         mission = null;
                     }
                 }
 
-                // no immediate expansion targets found, move toward something
                 if (mission == null) {
+                    Location bestExpTarget = bfsBest(friendlyLoc, 3.0, loc -> {
+                        Site s = gameMap.getSite(loc);
+                        if (s.owner == GameMap.NEUTRAL_OWNER)
+                            return expansionMap.getValue(loc);
+                        else
+                            return 0.0;
+                    });
                     Location climbTarget = bfsBest(friendlyLoc, 1.0, loc -> expansionMap.getValue(loc));
-                    if (climbTarget != null) {
-                        target = climbTarget;
-                        mission = new Mission(friendlyLoc, target, loc -> simMap.getSite(loc).strength > WAIT_FACTOR * simMap.getSite(loc).production);
-                        out.printf("\t[%s] No good priorities, moving outward to climb target: %s\n", getTimeRemaining(), target);
+
+
+                    if (bestExpTarget != null) {
+                        log("\tInterior unit moving toward expansion area %s", bestExpTarget);
+                        mission = new Mission(friendlyLoc, bestExpTarget, loc -> simMap.getSite(loc).strength > WAIT_FACTOR * simMap.getSite(loc).production);
                     } else if (nearestFrontier != null) {
-                        target = nearestFrontier;
-                        mission = new Mission(friendlyLoc, target, loc -> simMap.getSite(loc).strength > WAIT_FACTOR * simMap.getSite(loc).production);
-                        out.printf("\t[%s] No good priorities, moving outward to frontier: %s\n", getTimeRemaining(), target);
+                        log("\tInterior unit moving toward nearest frontier: %s", nearestFrontier);
+                        mission = new Mission(friendlyLoc, nearestFrontier, loc -> simMap.getSite(loc).strength > WAIT_FACTOR * simMap.getSite(loc).production);
+                    } else if (climbTarget != null) {
+                        log("\tInterior unit moving climbing diffusion map: %s", nearestFrontier);
+                        mission = new Mission(friendlyLoc, climbTarget, loc -> simMap.getSite(loc).strength > WAIT_FACTOR * simMap.getSite(loc).production);
                     } else {
-                        target = getNearestBoundary(friendlyLoc);
-                        mission = new Mission(friendlyLoc, target, loc -> simMap.getSite(loc).strength > WAIT_FACTOR * simMap.getSite(loc).production);
-                        out.printf("\t[%s] No good priorities, moving outward to boundary: %s\n", getTimeRemaining(), target);
+                        Location nearestBoundary = getNearestBoundary(friendlyLoc);
+                        log("\tInterior unit moving to nearest boundary: %s", nearestBoundary);
+                        mission = new Mission(friendlyLoc, nearestBoundary, loc -> simMap.getSite(loc).strength > WAIT_FACTOR * simMap.getSite(loc).production);
                     }
                 }
 
                 // movement
                 if (mission.shouldMove()) {
                     Location nextStep = astar.aStarFirstStep(friendlyLoc, mission.target);
-                    out.printf("\t[%s] A* says next step is %s\n", getTimeRemaining(), nextStep);
+                    log("\tA* says next step is %s", nextStep);
                     Direction direction = simMap.anyMoveToward(friendlyLoc, nextStep);
 
                     Site nextStepSite = simMap.getSite(friendlyLoc, direction);
@@ -322,13 +331,13 @@ public class HaliteBot {
 
                     if (isFriendly(nextStepSite)) {
                         int capWaste = (site.strength + nextStepSite.strength) - GameMap.MAX_STRENGTH;
-                        out.printf("\t[%s] Cap waste is (%s + %s) - 255 = %s\n", getTimeRemaining(), site.strength, nextStepSite.strength, capWaste);
+                        log("\tCap waste is (%s + %s) - 255 = %s", site.strength, nextStepSite.strength, capWaste);
 
                         if (capWaste > 20) {
                             if (nonFrontiers.contains(nextStep)
                                     && nextStepSite.strength < site.strength
                                     && nextStepSite.strength < 200) {
-                                out.printf("\t[%s] Swapping with %s\n", getTimeRemaining(), nextStep);
+                                log("\tSwapping with %s", nextStep);
                                 Move nextStepMove = new Move(nextStep, simMap.anyMoveToward(nextStep, friendlyLoc), myID);
                                 nonFrontiers.remove(nextStep);
                                 myMoves.add(nextStepMove);
@@ -339,7 +348,7 @@ public class HaliteBot {
                             int gatherStrength = site.strength;
                             if (nonFrontiers.contains(nextStep)
                                     && nextStepSite.strength < 200) {
-                                out.printf("\t[%s] Telling %s to stay put\n", getTimeRemaining(), nextStep);
+                                log("\tTelling %s to stay put", nextStep);
                                 Move nextStepMove = new Move(nextStep, Direction.STILL, myID);
                                 nonFrontiers.remove(nextStep);
                                 myMoves.add(nextStepMove);
@@ -368,20 +377,20 @@ public class HaliteBot {
 
                     move = new Move(friendlyLoc, direction, myID);
                     myMoves.add(move);
-                    out.printf("\t[%s] Added move %s\n", getTimeRemaining(), move);
+                    log("\tAdded move %s", move);
                 }
             }
 
-            out.printf("Time left after assigning all moves: %s\n", getTimeRemaining());
+            log("Assigned all moves");
 
-            out.printf("Moves: %s\n", myMoves);
+            log("Moves: %s", myMoves);
             Networking.sendFrame(myMoves);
         }
 
     }
 
     private Location bfsBestFriendlyBoundary(Location location, double maxDistance) {
-//        out.printf("\t[%s] bfsBestFriendlyBoundary %s\n", getTimeRemaining(), location);
+//        log("\tbfsBestFriendlyBoundary %s", location);
         Queue<Location> frontier = new LinkedBlockingQueue<>();
         HashMap<Site, Boolean> visited = new HashMap<>();
         frontier.add(location);
@@ -439,12 +448,12 @@ public class HaliteBot {
                 }
             }
         }
-//        out.printf("\t[%s] bfsBest bestLoc is %s\n", getTimeRemaining(), bestLoc);
+//        log("\tbfsBest bestLoc is %s", bestLoc);
         return bestLoc;
     }
 
     private Location bfsFirst(Location loc, double maxDistance, BFSScorer scorer) {
-//        out.printf("\t[%s] bfsFirst %s\n", getTimeRemaining(), loc);
+//        log("\tbfsFirst %s", loc);
         Queue<Location> frontier = new LinkedBlockingQueue<>();
         HashMap<Site, Boolean> visited = new HashMap<>();
         frontier.add(loc);
@@ -469,7 +478,7 @@ public class HaliteBot {
                 }
             }
         }
-//        out.printf("\t[%s] bfsFirst bestLoc is %s\n", getTimeRemaining(), bestLoc);
+//        log("\tbfsFirst bestLoc is %s", bestLoc);
         return bestLoc;
     }
 
@@ -532,5 +541,16 @@ public class HaliteBot {
             }
         }
         return nearest;
+    }
+
+    private void log(String fmtString, Object... oldArgs) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("[%s] ");
+        builder.append(fmtString);
+        builder.append("\n");
+        Object[] stringArgs = new Object[oldArgs.length + 1];
+        stringArgs[0] = getTimeRemaining();
+        System.arraycopy(oldArgs, 0, stringArgs, 1, oldArgs.length);
+        out.printf(builder.toString(), stringArgs);
     }
 }

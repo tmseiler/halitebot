@@ -120,13 +120,16 @@ public class GameMap {
         return movedPieces.get(loc.y).get(loc.x).get(owner);
     }
 
-    private void movePiece(Piece piece, Location loc) {
+    private int movePiece(Piece piece, Location loc) {
         Piece existingPiece = getMovedPiece(loc, piece.owner);
+        int wastedStrength = 0;
         if (existingPiece == null) {
             movedPieces.get(loc.y).get(loc.x).put(piece.owner, piece);
         } else {
+            wastedStrength = Math.abs(existingPiece.strength - piece.strength);
             existingPiece.strength = Math.min(piece.strength + existingPiece.strength, MAX_STRENGTH);
         }
+        return wastedStrength;
     }
 
     private Piece getUnmovedPiece(int y, int x) {
@@ -162,6 +165,7 @@ public class GameMap {
                 movePiece(new Piece(piece.owner, 0, true), move.loc);
                 unmovedPieces.get(move.loc.y).set(move.loc.x, null);
                 movePiece(piece, targetLoc);
+//                score -= 4 * movePiece(piece, targetLoc);
             }
         }
 

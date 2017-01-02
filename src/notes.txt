@@ -1,4 +1,10 @@
+refactor goal selection into appropriate methods
+clean up some more
+
 update interior logic:
 	1. check for nearby expansion targets (4ish? radius)
 	2. check for frontier
 	3. just climb
+
+look at the strength difference despite the same starts:
+https://halite.io/game.php?replay=ar1483293614-889103528.hlt

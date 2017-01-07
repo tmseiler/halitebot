@@ -311,7 +311,7 @@ public class GameMap {
                 possibleDirections.add(Direction.NORTH);
         }
 
-        out.printf("moveToward %s to %s (%s)\n", origin, destination, possibleDirections);
+//        out.printf("moveToward %s to %s (%s)\n", origin, destination, possibleDirections);
         return possibleDirections;
     }
 

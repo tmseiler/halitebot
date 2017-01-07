@@ -1,10 +1,15 @@
 refactor goal selection into appropriate methods
 clean up some more
 
-update interior logic:
-	1. check for nearby expansion targets (4ish? radius)
-	2. check for frontier
-	3. just climb
-
 look at the strength difference despite the same starts:
 https://halite.io/game.php?replay=ar1483293614-889103528.hlt
+
+sort expansion spots by value
+for each expansion spot:
+	if adjacent friendly unit is claimed:
+	continue
+	bfs for total strength
+	if strength ever exceeds strength of target:
+		assign all the mission to move to it
+	if strength never exceeds target after max depth:
+		skip them or intentionally tell them to wait?

@@ -71,7 +71,7 @@ public class AStar {
                 pathList.add(destination.location);
         }
         Collections.reverse(pathList);
-        out.printf("\tPath for %s -> %s: %s\n", start, goal, pathList);
+//        out.printf("\tPath for %s -> %s: %s\n", start, goal, pathList);
 
         pathCache.get(start).put(goal, pathList);
 

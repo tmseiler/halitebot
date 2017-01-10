@@ -26,5 +26,5 @@
 
 #./halite -s 3812137292 -d "25 25" "java -cp ~/projects/halitebot/v30 MyBot" "java MyBot"
 #./halite -d "30 30" "java -cp ~/projects/halitebot/v30 MyBot" "java MyBot" "java -cp ~/projects/halitebot/v30 MyBot"
-#./halite -s 2396427841 -d "30 30" "java -cp ~/projects/halitebot/v30 MyBot" "java MyBot"
-./halite -s 269343253 -d "30 30" "java -cp ~/projects/halitebot/v30 MyBot" "java MyBot"
+./halite -s 740075715 -d "30 30" "java -cp ~/projects/halitebot/v30 MyBot" "java MyBot"
+#./halite -s 269343253 -d "30 30" "java -cp ~/projects/halitebot/v30 MyBot" "java MyBot"

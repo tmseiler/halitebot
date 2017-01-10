@@ -164,8 +164,8 @@ public class GameMap {
                 Piece piece = getUnmovedPiece(move.loc);
                 movePiece(new Piece(piece.owner, 0, true), move.loc);
                 unmovedPieces.get(move.loc.y).set(move.loc.x, null);
-                movePiece(piece, targetLoc);
-//                score -= 4 * movePiece(piece, targetLoc);
+                double waste = movePiece(piece, targetLoc);
+                if(waste > 25) score -= Integer.MAX_VALUE;
             }
         }
 
@@ -269,7 +269,7 @@ public class GameMap {
             if (site.strength > 200) {
                 return 5;
             }
-            return site.production > 4 ? 2 : 1;
+            return site.production > 7 ? 1 : 1;
         } else {
             if (site.strength > 200) {
                 return 7;

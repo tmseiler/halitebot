@@ -203,10 +203,10 @@ public class HaliteBot {
                 });
                 Location nearestBoundary = getNearestBoundary(friendlyLoc);
 
-                double bestExpansionDistance = gameMap.getDistance(friendlyLoc, bestExpansion);
+//                double bestExpansionDistance = gameMap.getDistance(friendlyLoc, bestExpansion);
 
-                boolean bigEnough = friendlyLocations.size() > (double) (gameMap.width * gameMap.height) / 9.0;
-                Location bestNearby = bfsBestFriendlyBoundary(friendlyLoc, bigEnough ? 2 : 1);
+                boolean bigEnough = friendlyLocations.size() > (double) (gameMap.width * gameMap.height) / 8.0;
+                Location bestNearby = bfsBestFriendlyBoundary(friendlyLoc, 1);
 
                 log("\tNearest frontier is: %s", target);
                 if (nearestFrontier != null) {
@@ -234,9 +234,12 @@ public class HaliteBot {
                     log("\tBest nearby friendly is %s", bestNearby);
 
                     if (bestAdjacent != null && bestNearby != null) {
-                        boolean veryWeak = gameMap.getSite(bestAdjacent).strength < (WAIT_FACTOR + 1) * gameMap.getSite(bestAdjacent).production;
-                        if (expansionMap.getValue(bestAdjacent) >= expansionMap.getValue(bestNearby)
+                        Site adjacentSite = gameMap.getSite(bestAdjacent);
+                        boolean veryWeak = adjacentSite.strength < (WAIT_FACTOR + 1) * adjacentSite.production;
+                        if ((bestAdjacent == climbTarget && shouldCapture(friendlyLoc, bestAdjacent))
                                 || veryWeak
+//                                || (shouldCapture(friendlyLoc, bestAdjacent)
+//                                    && gameMap.getSite(bestAdjacent).individualAcquisitionScore() >= gameMap.getSite(bestNearby).individualAcquisitionScore())
                                 ) {
                             target = bestAdjacent;
                             log("\tBest expansion target is adjacent: %s", target);
@@ -261,19 +264,21 @@ public class HaliteBot {
                 }
 
                 if (mission == null) {
-                    if (bigEnough) {
-                        log("\tLeaving early expansion mode");
-                        if(nearestFrontier != null && gameMap.getDistance(friendlyLoc, nearestFrontier) < bestExpansionDistance / 2.0) {
-                            log("\tInterior unit moving toward frontier %s", nearestFrontier);
-                            mission = new Mission(friendlyLoc, nearestFrontier, loc -> gameMap.getSite(loc).strength > WAIT_FACTOR * gameMap.getSite(loc).production);
-                        } else {
-                            log("\tInterior unit moving toward best expansion target %s", bestBoundary);
-                            mission = new Mission(friendlyLoc, bestBoundary, loc -> gameMap.getSite(loc).strength > WAIT_FACTOR * gameMap.getSite(loc).production);
-                        }
-                    } else {
-                        log("\tInterior unit moving to: %s", nearestBoundary);
-                        mission = new Mission(friendlyLoc, nearestBoundary, loc -> gameMap.getSite(loc).strength > WAIT_FACTOR * gameMap.getSite(loc).production);
-                    }
+//                    if (contactMade && site.strength > 200) {
+//                        log("\tLeaving early expansion mode");
+//                        if(nearestFrontier != null && gameMap.getDistance(friendlyLoc, nearestFrontier) < 10) {
+//                            log("\tInterior unit moving toward frontier %s", nearestFrontier);
+//                            mission = new Mission(friendlyLoc, nearestFrontier, loc -> gameMap.getSite(loc).strength > WAIT_FACTOR * gameMap.getSite(loc).production);
+//                        } else {
+//                            Location location = bestExpansion != null ? bestExpansion : nearestBoundary;
+//                            log("\tInterior unit moving toward best expansion target %s", location);
+//                            mission = new Mission(friendlyLoc, location, loc -> gameMap.getSite(loc).strength > WAIT_FACTOR * gameMap.getSite(loc).production);
+//                        }
+//                    } else {
+                        log("\tInterior unit moving to: %s", climbTarget);
+                        Location location = climbTarget != null ? climbTarget : nearestBoundary;
+                        mission = new Mission(friendlyLoc, location, loc -> gameMap.getSite(loc).strength > WAIT_FACTOR * gameMap.getSite(loc).production);
+//                    }
                 }
 
                 // movement
@@ -289,7 +294,7 @@ public class HaliteBot {
                         int capWaste = (site.strength + nextStepSite.strength) - GameMap.MAX_STRENGTH;
                         log("\tCap waste is (%s + %s) - 255 = %s", site.strength, nextStepSite.strength, capWaste);
 
-                        if (capWaste > 20) {
+                        if (capWaste > 10) {
                             if (nonFrontiers.contains(nextStep)
                                     && nextStepSite.strength < site.strength
                                     && nextStepSite.strength < 200) {

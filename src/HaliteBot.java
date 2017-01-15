@@ -290,13 +290,7 @@ public class HaliteBot {
 //                }
 
                 if (mission == null) {
-                    final int waitModifier;
-                    if (contactMade && gameMap.getDistance(friendlyLoc, nearestFrontier) > 5.0)
-                        waitModifier = 0;
-                    else
-                        waitModifier = 0;
                     log("\tInterior unit moving to: %s", nearestBoundary);
-//                    mission = new Mission(friendlyLoc, nearestBoundary, loc -> gameMap.getSite(loc).strength > Math.max((WAIT_FACTOR) * gameMap.getSite(loc).production, 20));
                     mission = new Mission(friendlyLoc, nearestBoundary, loc -> gameMap.getSite(loc).strength > (WAIT_FACTOR) * gameMap.getSite(loc).production);
                 }
 

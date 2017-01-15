@@ -32,7 +32,7 @@ public class HaliteBot {
         myID = iPackage.myID;
         gameMap = iPackage.map;
 
-        Networking.sendInit("Dahlia mk34");
+        Networking.sendInit("Dahlia mk35");
 
 
         while (true) {

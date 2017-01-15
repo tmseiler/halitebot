@@ -10,6 +10,7 @@ import static util.Logger.out;
 public class GameMap {
     public ArrayList<ArrayList<Site>> contents;
     public ArrayList<ArrayList<HashMap<Integer, Piece>>> movedPieces;
+    public ArrayList<ArrayList<HashMap<Integer, Integer>>> strengthMoved;
     public ArrayList<ArrayList<Piece>> unmovedPieces;
 
     public int width;
@@ -24,20 +25,25 @@ public class GameMap {
         width = 0;
         height = 0;
         contents = new ArrayList<>(0);
+
     }
 
     public GameMap(int width_, int height_) {
         width = width_;
         height = height_;
         contents = new ArrayList<>(0);
+        strengthMoved = new ArrayList<>(0);
         for (int y = 0; y < height; y++) {
             ArrayList<Site> row = new ArrayList<>();
+            ArrayList<HashMap<Integer, Integer>> movedStrengthRow = new ArrayList<>();
             for (int x = 0; x < width; x++) {
                 Site site = new Site();
                 site.location = new Location(x, y);
                 row.add(site);
+                movedStrengthRow.add(new HashMap<>());
             }
             contents.add(row);
+            strengthMoved.add(movedStrengthRow);
         }
     }
 
@@ -45,7 +51,9 @@ public class GameMap {
         GameMap retMap = new GameMap(width, height);
         for (int y = 0; y < height; y++) {
             ArrayList<Site> row = new ArrayList<>();
+            ArrayList<HashMap<Integer, Integer>> movedStrengthRow = new ArrayList<>();
             for (int x = 0; x < width; x++) {
+                movedStrengthRow.add(new HashMap<>());
                 Site s = new Site();
                 Location loc = new Location(x, y);
                 s.location = loc;
@@ -57,6 +65,7 @@ public class GameMap {
                 row.add(s);
             }
             retMap.contents.set(y, row);
+            retMap.strengthMoved.set(y, movedStrengthRow);
         }
         return retMap;
     }
@@ -116,6 +125,11 @@ public class GameMap {
         return contents.get(loc.y).get(loc.x);
     }
 
+    public int getMovedStrength(Location loc, int owner) {
+        Integer strength = strengthMoved.get(loc.y).get(loc.x).get(owner);
+        return strength == null ? 0 : strength;
+    }
+
     private Piece getMovedPiece(Location loc, int owner) {
         return movedPieces.get(loc.y).get(loc.x).get(owner);
     }
@@ -123,6 +137,14 @@ public class GameMap {
     private int movePiece(Piece piece, Location loc) {
         Piece existingPiece = getMovedPiece(loc, piece.owner);
         int wastedStrength = 0;
+        HashMap<Integer, Integer> movedStrengthForLoc = strengthMoved.get(loc.y).get(loc.x);
+        Integer movedStrengthForOwner = movedStrengthForLoc.get(piece.owner);
+        if (movedStrengthForOwner == null) {
+            movedStrengthForLoc.put(piece.owner, piece.strength);
+        } else {
+            strengthMoved.get(loc.y).get(loc.x).put(piece.owner, movedStrengthForOwner + piece.strength);
+        }
+
         if (existingPiece == null) {
             movedPieces.get(loc.y).get(loc.x).put(piece.owner, piece);
         } else {
@@ -165,7 +187,7 @@ public class GameMap {
                 movePiece(new Piece(piece.owner, 0, true), move.loc);
                 unmovedPieces.get(move.loc.y).set(move.loc.x, null);
                 double waste = movePiece(piece, targetLoc);
-                if(waste > 25) score -= Integer.MAX_VALUE;
+//                if (waste > 25) score -= Integer.MAX_VALUE;
             }
         }
 
@@ -219,7 +241,7 @@ public class GameMap {
                     Site site = getSite(loc);
 
                     // some piece lived
-                    if (piece.strength > 0) {
+                    if (piece.strength > 0 || piece.damageTaken == 0) {
                         site.strength = piece.strength;
                         site.owner = piece.owner;
                         if (site.owner == myID) score += 5 * site.production;
@@ -269,7 +291,7 @@ public class GameMap {
             if (site.strength > 200) {
                 return 5;
             }
-            return site.production > 7 ? 1 : 1;
+            return 1;
         } else {
             if (site.strength > 200) {
                 return 7;

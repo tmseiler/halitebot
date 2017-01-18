@@ -244,13 +244,13 @@ public class GameMap {
                     if (piece.strength > 0 || piece.damageTaken == 0) {
                         site.strength = piece.strength;
                         site.owner = piece.owner;
-                        if (site.owner == myID) score += 5 * site.production;
+                        if (site.owner == myID) score += 5 * site.production + 1;
                         break;
                     }
 
                     // all pieces died
                     if (piece.damageTaken > 0) {
-                        if (site.owner != myID) score += 3 * site.production;
+                        if (site.owner != myID) score += 3 * site.production + 1;
                         site.owner = NEUTRAL_OWNER;
                     } else {
                         site.owner = piece.owner;
@@ -291,11 +291,11 @@ public class GameMap {
             if (site.strength > 200) {
                 return 5;
             }
-            return 1;
+            return site.production > 7 ? 1 : 1;
         } else {
             if (site.strength > 200) {
                 return 7;
-            } else if (site.strength > 0) return 5;
+            } else if (site.strength > 0) return 3;
             else return 1;
         }
     }

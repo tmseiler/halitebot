@@ -16,7 +16,7 @@ public class HaliteBot {
     private int turnNumber = 0;
     private int turnsLeft = 0;
     double AGGRESSION_DISTANCE = 8.0;
-    int bestProd = Integer.MIN_VALUE;
+    int maxProd = Integer.MIN_VALUE;
 
 
     private ArrayList<Location> friendlyLocations;
@@ -83,7 +83,7 @@ public class HaliteBot {
                     for (int x = 0; x < gameMap.width; x++) {
                         Site site = gameMap.getSite(new Location(x, y));
                         if (site.owner == GameMap.NEUTRAL_OWNER && site.strength != 0) {
-                            newMap[x][y] = site.individualAcquisitionScore();
+                            newMap[x][y] = site.score();
                         }
                     }
                 }
@@ -97,7 +97,7 @@ public class HaliteBot {
                 for (int x = 0; x < gameMap.width; x++) {
                     Location location = new Location(x, y);
                     Site site = gameMap.getSite(location);
-                    if(site.production > bestProd) bestProd = site.production;
+                    if(site.production > maxProd) maxProd = site.production;
                     site.isFriendly = isFriendly(site);
                     if (site.isFriendly) {
                         friendlyLocations.add(location);
@@ -219,7 +219,7 @@ public class HaliteBot {
                 Location bestNearbyNeutral = bfsBest(friendlyLoc, 2.0, loc -> {
                     Site s = gameMap.getSite(loc);
                     if (s.owner == GameMap.NEUTRAL_OWNER)
-                        return s.individualAcquisitionScore();
+                        return s.score();
                     else
                         return 0.0;
                 });
@@ -227,7 +227,7 @@ public class HaliteBot {
                 Location bestAdjacent = bfsBest(friendlyLoc, 1.0, loc -> {
                     Site s = gameMap.getSite(loc);
                     if (s.owner == GameMap.NEUTRAL_OWNER)
-                        return s.individualAcquisitionScore();
+                        return s.score();
                     else
                         return 0.0;
                 });
@@ -254,27 +254,36 @@ public class HaliteBot {
                 }
 
                 // Expanding
-                if (mission == null && bestAdjacent != null) {
+                if (mission == null) {
                     log("\tbestNearbyNeutral is %s", bestNearbyNeutral);
                     log("\tbestAdjacent is %s", bestAdjacent);
                     log("\tBest nearby friendly is %s", bestNearby);
-                    int adjacentROI = getCaptureROI(gameMap.getSite(bestAdjacent));
 
                     // always capture if climb target is the best
-                    boolean efficient = site.strength < site.production * WAIT_FACTOR;
-//                    boolean veryWeak = site.strength < 25 && site.production > 2;
-//                    boolean veryProductive = site.production > .7 * bestProd;
-
-                    boolean goodEnoughToGetNow = adjacentROI > 0 && (efficient);
-                    if (shouldCapture(friendlyLoc, bestAdjacent) && (bestAdjacent == climbTarget || goodEnoughToGetNow)) {
-                        log("\tadjacent is pretty good, capturing it. Expected ROI:", adjacentROI);
-                        mission = new Mission(friendlyLoc, bestAdjacent, loc -> gameMap.getSite(loc).strength > 0);
+                    if (bestAdjacent != null && bestNearby != null) {
+                        Site adjacentSite = gameMap.getSite(bestAdjacent);
+                        boolean veryWeak = adjacentSite.strength < (WAIT_FACTOR + 1) * adjacentSite.production;
+                        if ((bestAdjacent == climbTarget && shouldCapture(friendlyLoc, bestAdjacent))
+                                || veryWeak) {
+                            target = bestAdjacent;
+                            log("\tBest expansion target is adjacent: %s", target);
+                            mission = new Mission(friendlyLoc, bestAdjacent, loc -> true);
+                        } else {
+                            target = bestNearby;
+                            log("\tBest expansion target is nearby: %s", target);
+                            mission = new Mission(friendlyLoc, target, loc -> gameMap.getSite(loc).strength > WAIT_FACTOR * gameMap.getSite(loc).production);
+                        }
+                    } else if (bestAdjacent != null && getCaptureROI(gameMap.getSite(bestAdjacent)) > 0) {
+                        target = bestAdjacent;
+                        log("\tBest expansion target is adjacent: %s", target);
+                        mission = new Mission(friendlyLoc, bestAdjacent, loc -> true);
+                    } else if (bestNearby != null) {
+                        target = bestNearby;
+                        log("\tBest expansion target is nearby: %s", target);
+                        mission = new Mission(friendlyLoc, target, loc -> gameMap.getSite(loc).strength > WAIT_FACTOR * gameMap.getSite(loc).production);
                     } else {
-                        log("\tgoing to bestNearby %s instead of adjacent", bestNearby);
-                        mission = new Mission(friendlyLoc, bestNearby, loc -> {
-                            Site s = gameMap.getSite(loc);
-                            return !isFriendly(s) || s.strength > WAIT_FACTOR * s.production;
-                        });
+                        log("\tNo expansion targets nearby.");
+                        mission = null;
                     }
 
                 }
@@ -353,21 +362,21 @@ public class HaliteBot {
         for (Location enemyCombatant : enemyCombatants) {
             Site combatantSite = gameMap.getSite(enemyCombatant);
             int bestCount = 0;
-            if (!isFrontier(enemyCombatant)) {
-                Location nearestFrontier = bfsFirst(enemyCombatant, 2.0, loc -> {
-                    Site s = gameMap.getSite(loc);
-                    return s.owner == GameMap.NEUTRAL_OWNER && s.strength == 0 ? 1.0 : 0.0;
-                });
-
-                log("Nearest frontier to enemy %s is %s", enemyCombatant, nearestFrontier);
-
-                Move move = new Move(enemyCombatant,
-                        gameMap.anyMoveToward(enemyCombatant, nearestFrontier),
-                        combatantSite.owner);
-//                    log("Adding enemy move %s (non-frontier)", move);
-                enemyMoves.add(move);
-                continue;
-            }
+//            if (!isFrontier(enemyCombatant)) {
+//                Location nearestFrontier = bfsFirst(enemyCombatant, 2.0, loc -> {
+//                    Site s = gameMap.getSite(loc);
+//                    return s.owner == GameMap.NEUTRAL_OWNER && s.strength == 0 ? 1.0 : 0.0;
+//                });
+//
+//                log("Nearest frontier to enemy %s is %s", enemyCombatant, nearestFrontier);
+//
+//                Move move = new Move(enemyCombatant,
+//                        gameMap.anyMoveToward(enemyCombatant, nearestFrontier),
+//                        combatantSite.owner);
+////                    log("Adding enemy move %s (non-frontier)", move);
+//                enemyMoves.add(move);
+//                continue;
+//            }
 
             Direction bestDirection = Direction.STILL;
 
@@ -419,7 +428,7 @@ public class HaliteBot {
                 } else {
                     // evaluate score
                     double val = expansionMap.getValue(nextLoc);
-//                    double val = nextSite.individualAcquisitionScore();
+//                    double val = nextSite.score();
                     if (val > bestVal) {
                         bestVal = val;
                         bestLoc = nextLoc;

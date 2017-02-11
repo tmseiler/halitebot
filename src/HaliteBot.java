@@ -123,8 +123,8 @@ public class HaliteBot {
             }
 
             if (friendlyFrontiers.size() > 0) contactMade = true;
-            WAIT_FACTOR = contactMade ? 7 : 5;
-            int COMBAT_WAIT_FACTOR = WAIT_FACTOR;
+            WAIT_FACTOR = contactMade ? 9 : 5;
+            int COMBAT_WAIT_FACTOR = 5;
 
             log("preprocessed map");
 
@@ -153,7 +153,7 @@ public class HaliteBot {
                     int capWaste = locMap.getMovedStrength(moveLoc, myID) + site.strength - GameMap.MAX_STRENGTH;
 
                     GameMap simMap = locMap.copy();
-                    log("\tcapWaste for %s attacking %s is %s", frontierLoc, d, capWaste);
+//                    log("\tcapWaste for %s attacking %s is %s", frontierLoc, d, capWaste);
                     if ((moveSite.strength != 0 && moveSite.owner == GameMap.NEUTRAL_OWNER)
                             || capWaste > 25)
                         continue;
@@ -262,7 +262,7 @@ public class HaliteBot {
                     // always capture if climb target is the best
                     if (bestAdjacent != null && bestNearby != null) {
                         Site adjacentSite = gameMap.getSite(bestAdjacent);
-                        boolean veryWeak = adjacentSite.strength < (WAIT_FACTOR + 1) * adjacentSite.production;
+                        boolean veryWeak = adjacentSite.strength < 6 * adjacentSite.production;
                         if ((bestAdjacent == climbTarget && shouldCapture(friendlyLoc, bestAdjacent))
                                 || veryWeak) {
                             target = bestAdjacent;
@@ -310,7 +310,7 @@ public class HaliteBot {
                     log("\tA* says next step is %s", nextStep);
                     Direction direction = simMap.anyMoveToward(friendlyLoc, nextStep);
 
-                    Site nextStepSite = simMap.getSite(friendlyLoc, direction);
+                    Site nextStepSite = gameMap.getSite(friendlyLoc, direction);
                     if (combatParticipants.contains(nextStep)) continue;
 
                     if (isFriendly(nextStepSite)) {
@@ -322,7 +322,7 @@ public class HaliteBot {
                                     && nextStepSite.strength < site.strength
                                     && nextStepSite.strength < 200) {
                                 log("\tSwapping with %s", nextStep);
-                                Move nextStepMove = new Move(nextStep, simMap.anyMoveToward(nextStep, friendlyLoc), myID);
+                                Move nextStepMove = new Move(nextStep, gameMap.anyMoveToward(nextStep, friendlyLoc), myID);
                                 nonFrontiers.remove(nextStep);
                                 myMoves.add(nextStepMove);
                             } else {
